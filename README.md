@@ -56,7 +56,7 @@
 
 ## 许可证
 
-[MIT License](LICENSE)
+[MIT License](https://gitee.com/quanmian/GKS-schoolnet-login/blob/master/LICENSE)
 
 主要修改：
 

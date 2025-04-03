@@ -1,0 +1,10 @@
+/dist/
+/.venv/
+/.idea/
+/build/
+
+*.log
+*.spec
+*.exe
+.env
+config_secret.py

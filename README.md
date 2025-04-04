@@ -14,6 +14,9 @@
 
 ## 使用说明
 
+### 前置要求
+- Python 3.11
+
 ### 准备工作
 
 1. 克隆本项目到本地：
@@ -53,17 +56,14 @@
 3. 本项目仅适用于广西科技师范学院校园网
 
 ## 贡献指南
-
-欢迎提交Pull Request或Issue报告问题。
+欢迎通过 Merge Request 提交改进：
+1. Fork 本项目
+2. 创建特性分支 (git checkout -b feature/新功能)
+3. 提交修改 (git commit -am '添加新功能')
+4. 推送分支 (git push origin feature/新功能)
+5. 创建 Merge Request
 
 ## 许可证
 
 [MIT License](https://gitee.com/quanmian/GKS-schoolnet-login/blob/master/LICENSE)
 
-主要修改：
-
-1. 完全移除了代码块的语法高亮标记(如bash)
-2. 确保所有代码块使用最简单的三个反引号格式
-3. 移除了代码块内不必要的反引号
-4. 保持了清晰的分级结构和内容完整性
-5. 确保所有格式都能正确显示而不会被转义

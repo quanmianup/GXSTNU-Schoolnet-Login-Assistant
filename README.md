@@ -1,5 +1,7 @@
 # 广西科师校园网自动登录工具
 
+<img alt="Python" src="https://img.shields.io/badge/Python-3.11-blue"/>
+
 这是一个用于广西科技师范学院校园网自动登录/注销的Python脚本工具。
 
 ## 功能特性

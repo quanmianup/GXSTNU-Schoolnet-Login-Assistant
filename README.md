@@ -16,7 +16,7 @@
 
 1. 克隆本项目到本地：
    ```bash
-   git clone https://gitee.com/your_username/schoolnet.git
+   git clone https://gitee.com/quanmian/GKS-schoolnet-login.git
    ```
 2. 安装所需的Python库：
    ```bash
@@ -27,7 +27,7 @@
    cp config_secret_example.py config_secret.py
    ```
 
-然后编辑config_secret.py文件，填写你的校园网账号和密码。
+4. 然后编辑config_secret.py文件，填写你的校园网账号和密码。
 
 ### 运行方式
 

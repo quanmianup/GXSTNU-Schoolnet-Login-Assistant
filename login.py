@@ -16,135 +16,154 @@ pyinstaller [选项] 脚本文件.py
 """
 import logging
 import time
-import sys  # 新增导入
+import sys
 from urllib.parse import parse_qs
-from config_secret import USERNAME, PASSWORD  # 新增导入
-
+from config_secret import USERNAME, PASSWORD
 import requests
 
+# 常量定义
+BASE_URL = "http://1.1.1.1"
+AUTH_DOMAIN = "auth.gxstnu.edu.cn"
+MAX_RETRY = 4
+RETRY_INTERVAL = 1.5
 
-# 创建一个日志记录器
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
-# 创建一个文件处理器，并将日志写入到文件
-file_handler = logging.FileHandler(f'login{USERNAME}.log', encoding='utf-8')
-file_handler.setLevel(logging.DEBUG)
+# 日志配置
+def setup_logger():
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
 
-# 创建一个控制台处理器
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
-# 定义日志格式
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-file_handler.setFormatter(formatter)
-console_handler.setFormatter(formatter)
+    # 文件处理器
+    file_handler = logging.FileHandler(f'login_{USERNAME}.log', encoding='utf-8')
+    file_handler.setFormatter(formatter)
 
-# 将处理器添加到日志记录器
-logger.addHandler(file_handler)
-logger.addHandler(console_handler)
-data_login = {
-    'pageid': 5,
-    'templatetype': 1,
-    'isRemind': 1,
-    'url': 'http://1.1.1.1',
-    'userId': USERNAME,
-    'passwd': PASSWORD,
-    'remInfo': 'on'
+    # 控制台处理器
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+    console_handler.addHandler(console_handler)
+    return logger
+
+
+logger = setup_logger()
+
+# 请求数据模板
+REQUEST_DATA = {
+    'login': {
+        'pageid': 5,
+        'templatetype': 1,
+        'isRemind': 1,
+        'url': BASE_URL,
+        'userId': USERNAME,
+        'passwd': PASSWORD,
+        'remInfo': 'on'
+    },
+    'check': {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'pageId': '5',
+        'userId': USERNAME,
+    },
+    'disconnect': {
+        'hostIp': 'http://127.0.0.1:8080/',
+        'auth_type': 0,
+        'pageid': 5,
+        'userId': USERNAME,
+        'other1': 'disconn'
+    }
 }
-data_check = {  # 检查登录状态请求体
-    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-    'Content-Length': 26,
-    'Host': 'auth.gxstnu.edu.cn',
-    'pageId': '5',
-    'userId': USERNAME,
-}
-data_discon = {  # 下线请求体
-    'hostIp': ' http://127.0.0.1:8080/',
-    'auth_type': 0,
-    'isBindMac1': 0,
-    'pageid': 5,
-    'templatetype': 1,
-    'listbindmac': 0,
-    'recordmac': 0,
-    'isRemind': 1,
-    'distoken': '3f2bb10a720f2bffd060423453a0fa15',
-    'userId': USERNAME,
-    'other1': 'disconn'
-}
+
+
+class NetworkManager:
+    @staticmethod
+    def check_network():
+        """检查网络连接状态"""
+        try:
+            response = requests.get(
+                'http://www.bilibili.com',
+                headers={'User-Agent': 'Mozilla/5.0'},
+                timeout=8
+            )
+            return response.status_code == 200 and AUTH_DOMAIN not in response.url
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+            logger.warning(f'网络检测异常: {e}')
+            return False
+
+    @staticmethod
+    def get_auth_urls():
+        """获取认证相关URL"""
+        response = requests.get(BASE_URL)
+        query_params = parse_qs(response.url)
+
+        ip = query_params.get('wlanuserip', [''])[0]
+        mac = query_params.get('mac', [''])[0]
+
+        return {
+            'login': f'https://{AUTH_DOMAIN}/webauth.do?wlanacip=172.16.1.82&wlanuserip={ip}&mac={mac}',
+            'disconnect': f'https://{AUTH_DOMAIN}/webdisconn.do?wlanacip=172.16.1.82&wlanuserip={ip}&mac={mac}',
+            'check': f'https://{AUTH_DOMAIN}/getAuthResult.do'
+        }
 
 
 def login():
-    url_temp = (requests.get('http://1.1.1.1')).url  # 获取登录网址，里面包含错误信息
-    query_params = parse_qs(url_temp)  # 切分网址
-    ip = query_params.get('wlanuserip')  # 获取本机ip
-    mac = query_params.get('mac')  # 获取本机mac
-    url_login = (f'https://auth.gxstnu.edu.cn/webauth.do?wlanacip=172.16.1.82&wlanacname='
-                 f'GXSTNU-BRAS&wlanuserip={ip[0]}&mac={mac[0]}&vlan=0&url=http://1.1.1.1')  # 登录网址
-    url_discon = (f'https://auth.gxstnu.edu.cn/webdisconn.do?wlanacip=172.16.1.82&wlanacname'
-                  f'=GXSTNU-BRAS&wlanuserip={ip[0]}&mac={mac[0]}&vlan=0&url=http://1.1.1.1')  # 下线网址
-    url_check = "https://auth.gxstnu.edu.cn/getAuthResult.do"  # 检查登录状态网址
-    if 'errorMsg=' in url_temp:  # 如果账号在线就执行离线操作
-        requests.post(url=url_discon, data=data_discon)
-        url_temp = (requests.get('http://1.1.1.1')).url  # 获取登录网址，里面包含错误信息
-    logger.info(f'正在尝试登录校园网{USERNAME}.请稍等...')
-    for i in range(4):
-        requests.post(url=url_login, data=data_login)  # 登录校园网操作
-        time.sleep(1.5)
-        result = requests.post(url_check, data=data_check)  # 检查登录状态
-        if result.status_code == 200:  # 连接状态是否正常
-            if '运营商网络拨号成功' in result.text:  # 检查结果是否成功
-                logger.info(f'运营商网络拨号成功{USERNAME}')
-                break
-            elif ('errorMsg=' in url_temp) and (i >= 3):  # 账号在线网址才会包含“errorMsg=”
-                logger.warning(f'请先离线账号{USERNAME}')
-            elif i == 3:
-                logger.warning(f'请输入正确的用户名{USERNAME}和密码')
-        logger.info(f'正在尝试登录校园网{USERNAME}.请稍等...')
-    time.sleep(2)  # 延迟关闭控制台
+    """执行登录流程"""
+    urls = NetworkManager.get_auth_urls()
+
+    # 如果账号已在线，先执行下线
+    if 'errorMsg=' in urls.get('login', ''):
+        requests.post(urls['disconnect'], data=REQUEST_DATA['disconnect'])
+
+    logger.info(f'正在尝试登录校园网账号: {USERNAME}')
+
+    for attempt in range(MAX_RETRY):
+        try:
+            # 登录请求
+            requests.post(urls['login'], data=REQUEST_DATA['login'])
+            time.sleep(RETRY_INTERVAL)
+
+            # 检查状态
+            response = requests.post(urls['check'], data=REQUEST_DATA['check'])
+
+            if response.status_code == 200:
+                if '运营商网络拨号成功' in response.text:
+                    logger.info(f'登录成功: {USERNAME}')
+                    return True
+                elif attempt == MAX_RETRY - 1:
+                    logger.warning('请检查账号密码或先下线已登录账号')
+        except requests.exceptions.RequestException as e:
+            logger.error(f'登录请求失败: {e}')
+
+    return False
 
 
-def run():
-    url_bilibili = 'http://www.bilibili.com'
-    test_request = requests.get(url_bilibili,
-                                headers={
-                                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.97 Safari/537.36 Core/1.116.489.400 QQBrowser/13.7.6351.400'},
-                                timeout=8,
-                                )
-    if test_request.status_code == 200 and "auth.gxstnu.edu.cn" not in test_request.url:
-        logger.info('网络正常')
-    else:
+def build_executable():
+    """构建可执行文件"""
+    try:
+        import subprocess
+        subprocess.run([
+            "pyinstaller",
+            "--onefile",
+            "--noconsole",
+            f"--name=login_{USERNAME}",
+            "--icon=icon.ico",
+            "--clean",
+            "login.py"
+        ], check=True)
+        logger.info("EXE文件生成成功")
+    except Exception as e:
+        logger.error(f"构建失败: {e}")
+
+
+def main():
+    if not NetworkManager.check_network():
         login()
 
-
-def build_exe():
-    """仅在直接运行脚本时生成exe文件"""
-    import os
-    import subprocess
-
-    logger.info("开始生成exe文件...")
-    command = [
-        "pyinstaller",
-        "--onefile",
-        "--noconsole",
-        f"--name=login{USERNAME}",
-        "--icon=666.png",
-        "--clean",
-        "--exclude-module=build_exe",  # 确保不包含生成exe的代码
-        "login.py"
-    ]
-
-    try:
-        subprocess.run(command, check=True)
-        logger.info("exe文件生成成功！可在dist目录中找到")
-    except subprocess.CalledProcessError as e:
-        logger.error(f"生成exe文件失败: {e}")
-    except FileNotFoundError:
-        logger.error("未找到pyinstaller，请先安装: pip install pyinstaller")
+    # 直接运行时构建EXE
+    # if not getattr(sys, 'frozen', False):
+    #     build_executable()
 
 
 if __name__ == "__main__":
-    run()
-    # 只有在直接运行python脚本时才生成exe
-    if not getattr(sys, 'frozen', False):
-        build_exe()
+    main()

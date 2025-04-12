@@ -39,7 +39,7 @@
 直接运行Python脚本：
 
    ```bash
-   python login.py
+   python main.py
    ```
 
 生成的可执行文件会在dist目录中。

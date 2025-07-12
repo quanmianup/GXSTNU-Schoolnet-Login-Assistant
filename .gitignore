@@ -8,3 +8,4 @@
 *.exe
 .env
 config_secret.py
+/config/local_credentials.py

@@ -29,7 +29,7 @@
    ```
 3. 复制配置文件模板并填写你的账号信息：
    ```bash
-   cp config_secret_example.py config_secret.py
+   cp config_secret_example.py secret.py
    ```
 
 4. 然后编辑config_secret.py文件，填写你的校园网账号和密码。
@@ -39,7 +39,7 @@
 直接运行Python脚本：
 
    ```bash
-   python main.py
+   python run.py
    ```
 
 生成的可执行文件会在dist目录中。

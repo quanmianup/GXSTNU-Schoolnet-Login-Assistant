@@ -1,0 +1,45 @@
+# 构建产物
+/dist/
+/build/
+*.spec
+*.exe
+
+# 环境文件
+.env
+.venv/
+venv/
+
+# 配置文件（含敏感信息）
+/config/local_credentials.py
+*.cfg
+*.ini
+
+# 开发环境文件
+.idea/
+.vscode/
+__pycache__/
+*.code-workspace
+
+# 日志文件
+*.log
+logs/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python缓存
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# 测试报告
+.coverage
+test_*.*
+htmlcov/
+test-results.xml
+
+# 包管理
+pip-wheel-metadata/
+*.egg-info/

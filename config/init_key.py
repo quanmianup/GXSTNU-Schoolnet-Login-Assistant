@@ -3,7 +3,7 @@ from Crypto.Random import get_random_bytes
 
 from config.credentials import credentials
 from config.local_credentials import CREDENTIALS
-from app.utils.logger import logger
+from src.utils.logger import logger
 
 # 生成新密钥
 key = get_random_bytes(32)

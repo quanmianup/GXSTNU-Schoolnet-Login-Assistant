@@ -6,7 +6,7 @@ import sys
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad, pad
 
-from app.utils.logger import logger
+from src.utils.logger import logger
 from config.local_credentials import CREDENTIALS
 
 

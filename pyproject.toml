@@ -1,0 +1,30 @@
+# [build-system]
+# requires = ["setuptools>=61.0"]
+# build-backend = "setuptools.build_meta"
+
+[project]
+urls = { "Homepage" = "https://gitee.com/quanmian/GKS-schoolnet-login", "Bug Tracker" = "https://gitee.com/quanmian/GKS-schoolnet-login/issues" }
+name = "GXSTNU-Schoolnet-Login-Assistant"
+description = "广西科技师范学院校园网自动登录/注销工具"
+version = "1.0.0"
+authors = [{ name = "quanmian", email = "1604125741@qq.com" }]
+readme = "README.md"
+license = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: Microsoft :: Windows",
+    "Private :: Do Not Upload"
+]
+requires-python = ">=3.11"
+keywords = ["校园网", "自动登录", "广西科技师范学院"]
+dependencies = [
+    "loguru>=0.7.3",
+    "pycryptodome>=3.23.0",
+    "pyside6>=6.9.2",
+    "requests>=2.32.5",
+]
+
+
+[tool.uv]
+index-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+link-mode = "hardlink"

@@ -3,7 +3,7 @@ from urllib.parse import urlparse, parse_qs
 
 import requests
 
-from app.utils.logger import logger
+from src.utils.logger import logger
 # 导入配置
 from config.credentials import credentials
 
@@ -139,7 +139,8 @@ class NetworkManager:
             return {
                 'login': f'https://{self.AUTH_DOMAIN}/webauth.do?wlanacip=172.16.1.82&wlanuserip={ip}&mac={mac}',
                 'disconnect': f'https://{self.AUTH_DOMAIN}/webdisconn.do?wlanacip=172.16.1.82&wlanuserip={ip}&mac={mac}',
-                'check': f'https://{self.AUTH_DOMAIN}/getAuthResult.do'
+                'check': f'https://{self.AUTH_DOMAIN}/getAuthResult.do',
+                'test_url': self.TEST_URL,
             }
         except Exception as e:
             logger.error(f"获取认证链接失败: {e}")
@@ -187,6 +188,9 @@ class NetworkManager:
                 'distoken': "3f2bb10a720f2bffd060423453a0fa15",
                 'userId': username,
                 'other1': 'disconn'
+            },
+            'test_headers': {
+                'User-Agent': 'Mozilla/5.0'
             }
         }
         return data
@@ -235,7 +239,7 @@ class NetworkManager:
         logger.warning(f"{username}登录失败")
         return False
 
-    def logout(self, username=None):
+    def dislogin(self, username=None):
         """
         执行登出操作，支持重试机制。
 

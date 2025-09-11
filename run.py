@@ -1,10 +1,7 @@
-import sys
+"""
+项目入口文件，启动主界面。
+"""
+from src.gui.main_gui_program import run
 
-from PyQt5.QtWidgets import QApplication
-from app.gui.main_gui_program import MainWindow
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec_())
+if __name__ == '__main__':
+    run()

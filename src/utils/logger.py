@@ -1,5 +1,6 @@
 import os
 import sys
+from pathlib import Path
 
 from loguru import logger
 from config.credentials import credentials
@@ -29,8 +30,10 @@ def setup_logger(username=None):
     log_file_name = f"{username}.log"
 
     if getattr(sys, 'frozen', False):
-        # 打包成 exe 的环境，获取 exe 文件所在目录
-        base_path = os.path.dirname(sys.executable)
+        # 打包成 exe 的环境，将日志目录放到 self.task_folder 对应的目录下
+        from src.utils.task_manager import TaskManager
+        base_path = TaskManager().task_folder
+        log_dir = base_path / "logs"
     else:
         # 开发环境，获取项目根目录
         current_path = os.path.abspath(__file__)
@@ -46,7 +49,8 @@ def setup_logger(username=None):
                 raise FileNotFoundError("在开发环境下未找到项目根目录标识文件 'requirements.txt'")
             base_path = parent_path
 
-    log_dir = os.path.join(base_path, "logs")
+        log_dir = os.path.join(base_path, "logs")
+
     # 创建日志目录，若不存在
     os.makedirs(log_dir, exist_ok=True)
     new_log_path = os.path.join(log_dir, log_file_name)

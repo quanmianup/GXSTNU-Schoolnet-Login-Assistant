@@ -1,4 +1,4 @@
-﻿# Find all .ui files in assets/qtfile and Converted .py files output to src/gui directory
+# Find all .ui files in assets/qtfile and Converted .py files output to src/gui directory
 
 function Find-ProjectRoot {
     param (

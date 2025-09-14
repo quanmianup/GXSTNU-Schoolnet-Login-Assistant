@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>614</width>
-    <height>524</height>
+    <width>652</width>
+    <height>554</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -55,10 +55,25 @@
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">#widget {
+     <string notr="true">* {
+	font: 10pt &quot;微软雅黑&quot;;
+}
+QPushButton{
+	background-color: rgba(255, 255, 255, 0);
+}
+QPushButton:hover {
+	padding-bottom: 5px;
+	padding-left:5px;
+}
+QPushButton:pressed{
+	padding-top:3px;
+	padding-right:3px;
+}
+#widget {
 	background-color: white;
 	border-radius: 5px;
 	box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 1);
+	border: 1px solid rgb(204, 204, 204); 
 }</string>
     </property>
     <widget class="QFrame" name="frame_main">
@@ -71,15 +86,7 @@
       </rect>
      </property>
      <property name="styleSheet">
-      <string notr="true">QPushButton:hover {
-	padding-bottom: 8px;
-	padding-left:8px;
-}
-QPushButton:pressed{
-	padding-top:3px;
-	padding-right:3px;
-}
-</string>
+      <string notr="true"/>
      </property>
      <property name="frameShape">
       <enum>QFrame::Shape::StyledPanel</enum>
@@ -117,7 +124,8 @@ QPushButton:pressed{
     border-bottom: 1px solid black; 
 }
 QFrame#frame_tab QPushButton {
-    border-top-radius: 10px; 
+    border-top-right-radius: 10px; 
+    border-top-left-radius: 10px; 
     border: 1px solid #ccc; 
     background-color: #f8f8f8; 
 }
@@ -131,9 +139,12 @@ QPushButton:hover{
         <property name="frameShadow">
          <enum>QFrame::Shadow::Raised</enum>
         </property>
+        <property name="lineWidth">
+         <number>0</number>
+        </property>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <property name="spacing">
-          <number>3</number>
+          <number>1</number>
          </property>
          <property name="leftMargin">
           <number>0</number>
@@ -179,7 +190,7 @@ QPushButton:hover{
            </property>
            <property name="minimumSize">
             <size>
-             <width>130</width>
+             <width>101</width>
              <height>30</height>
             </size>
            </property>
@@ -209,11 +220,24 @@ QPushButton:hover{
       </item>
       <item>
        <widget class="QStackedWidget" name="stackedWidget_tab">
+        <property name="styleSheet">
+         <string notr="true">QLineEdit{
+	border-radius:5px;
+	background-color: rgb(255, 255, 255);
+	border: 1px solid #dcdcdc;
+}
+QPushButton{
+	border-radius:5px;
+	border: 1px solid #dcdcdc;
+	background-color: rgb(255, 255, 255);
+}
+</string>
+        </property>
         <property name="currentIndex">
          <number>0</number>
         </property>
         <widget class="QWidget" name="page_main">
-         <widget class="QFrame" name="frame_3">
+         <widget class="QFrame" name="frame_main_2">
           <property name="geometry">
            <rect>
             <x>0</x>
@@ -221,6 +245,12 @@ QPushButton:hover{
             <width>601</width>
             <height>431</height>
            </rect>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
           <property name="frameShape">
            <enum>QFrame::Shape::StyledPanel</enum>
@@ -229,25 +259,37 @@ QPushButton:hover{
            <enum>QFrame::Shadow::Raised</enum>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <property name="spacing">
+            <number>5</number>
+           </property>
+           <property name="leftMargin">
+            <number>5</number>
+           </property>
+           <property name="topMargin">
+            <number>5</number>
+           </property>
+           <property name="rightMargin">
+            <number>5</number>
+           </property>
+           <property name="bottomMargin">
+            <number>5</number>
+           </property>
            <item>
-            <widget class="QFrame" name="frame">
+            <widget class="QFrame" name="frame_left">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>230</width>
+               <height>0</height>
+              </size>
+             </property>
              <property name="styleSheet">
-              <string notr="true">*{
-	font: 10pt &quot;微软雅黑&quot;;
-    border-radius: 10px;
-}
-
-QPushButton{
-    border: 1px solid #dcdcdc;
-	background-color: rgb(255, 255, 255);
-}
-
-QLineEdit {
-	background-color: rgb(255, 255, 255);
-    border: 1px solid #dcdcdc;
-
-}
-</string>
+              <string notr="true"/>
              </property>
              <property name="frameShape">
               <enum>QFrame::Shape::StyledPanel</enum>
@@ -255,103 +297,370 @@ QLineEdit {
              <property name="frameShadow">
               <enum>QFrame::Shadow::Raised</enum>
              </property>
-             <widget class="QWidget" name="layoutWidget">
-              <property name="geometry">
-               <rect>
-                <x>0</x>
-                <y>0</y>
-                <width>281</width>
-                <height>411</height>
-               </rect>
+             <layout class="QGridLayout" name="gridLayout_3">
+              <property name="leftMargin">
+               <number>0</number>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayout_5">
-               <item>
-                <widget class="QLineEdit" name="lineEdit_username">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string/>
-                 </property>
-                 <property name="placeholderText">
-                  <string>请输入学号/工号</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="lineEdit_password">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="echoMode">
-                  <enum>QLineEdit::EchoMode::Password</enum>
-                 </property>
-                 <property name="placeholderText">
-                  <string>请输入密码</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QCheckBox" name="checkBox">
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>35</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>记住密码</string>
-                 </property>
-                 <property name="checked">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,1">
-                 <property name="spacing">
-                  <number>6</number>
-                 </property>
-                 <property name="sizeConstraint">
-                  <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
-                 </property>
-                 <property name="leftMargin">
-                  <number>0</number>
-                 </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <item row="0" column="1">
+               <widget class="QFrame" name="frame">
+                <layout class="QVBoxLayout" name="verticalLayout_2">
                  <item>
-                  <widget class="QPushButton" name="pushButton_login">
+                  <spacer name="verticalSpacer_lefttop">
+                   <property name="orientation">
+                    <enum>Qt::Orientation::Vertical</enum>
+                   </property>
+                   <property name="sizeType">
+                    <enum>QSizePolicy::Policy::Expanding</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>20</width>
+                     <height>50</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QLineEdit" name="lineEdit_username">
                    <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>30</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>30</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="placeholderText">
+                    <string>请输入学号/工号</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLineEdit" name="lineEdit_password">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>30</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>30</height>
+                    </size>
+                   </property>
+                   <property name="echoMode">
+                    <enum>QLineEdit::EchoMode::Password</enum>
+                   </property>
+                   <property name="placeholderText">
+                    <string>请输入密码</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QFrame" name="frame_checkBox">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="frameShape">
+                    <enum>QFrame::Shape::StyledPanel</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Shadow::Raised</enum>
+                   </property>
+                   <layout class="QHBoxLayout" name="horizontalLayout_6">
+                    <property name="spacing">
+                     <number>0</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QCheckBox" name="checkBox">
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>记住密码</string>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QStackedWidget" name="stackedWidget_message">
+                      <property name="enabled">
+                       <bool>true</bool>
+                      </property>
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">QLabel{
+	font: 10pt &quot;微软雅黑&quot;;
+}</string>
+                      </property>
+                      <property name="currentIndex">
+                       <number>0</number>
+                      </property>
+                      <widget class="QWidget" name="black_text">
+                       <property name="minimumSize">
+                        <size>
+                         <width>0</width>
+                         <height>0</height>
+                        </size>
+                       </property>
+                       <widget class="QLabel" name="label_black_message">
+                        <property name="geometry">
+                         <rect>
+                          <x>0</x>
+                          <y>0</y>
+                          <width>140</width>
+                          <height>20</height>
+                         </rect>
+                        </property>
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>20</height>
+                         </size>
+                        </property>
+                        <property name="styleSheet">
+                         <string notr="true">color: rgb(0, 0, 0);</string>
+                        </property>
+                        <property name="text">
+                         <string>登录中...</string>
+                        </property>
+                        <property name="alignment">
+                         <set>Qt::AlignmentFlag::AlignCenter</set>
+                        </property>
+                       </widget>
+                      </widget>
+                      <widget class="QWidget" name="green_text">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <widget class="QLabel" name="label_green_message">
+                        <property name="geometry">
+                         <rect>
+                          <x>0</x>
+                          <y>0</y>
+                          <width>140</width>
+                          <height>20</height>
+                         </rect>
+                        </property>
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>20</height>
+                         </size>
+                        </property>
+                        <property name="styleSheet">
+                         <string notr="true">color: rgb(0, 255, 0);</string>
+                        </property>
+                        <property name="text">
+                         <string>登录成功！</string>
+                        </property>
+                        <property name="alignment">
+                         <set>Qt::AlignmentFlag::AlignCenter</set>
+                        </property>
+                       </widget>
+                      </widget>
+                      <widget class="QWidget" name="red_text">
+                       <widget class="QLabel" name="label_red_message">
+                        <property name="geometry">
+                         <rect>
+                          <x>0</x>
+                          <y>0</y>
+                          <width>140</width>
+                          <height>20</height>
+                         </rect>
+                        </property>
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>20</height>
+                         </size>
+                        </property>
+                        <property name="styleSheet">
+                         <string notr="true">color:rgb(255, 0, 0);</string>
+                        </property>
+                        <property name="text">
+                         <string>登录失败！</string>
+                        </property>
+                        <property name="alignment">
+                         <set>Qt::AlignmentFlag::AlignCenter</set>
+                        </property>
+                       </widget>
+                      </widget>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QFrame" name="frame_login">
+                   <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,1">
+                    <property name="spacing">
+                     <number>7</number>
+                    </property>
+                    <property name="sizeConstraint">
+                     <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QPushButton" name="pushButton_login">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>登录</string>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="window.qrc">
+                        <normaloff>:/images/images/login.png</normaloff>:/images/images/login.png</iconset>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="pushButton_dislogin">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="text">
+                       <string>下线</string>
+                      </property>
+                      <property name="icon">
+                       <iconset resource="window.qrc">
+                        <normaloff>:/images/images/dislogin.png</normaloff>:/images/images/dislogin.png</iconset>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="pushButton_generate">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
@@ -369,16 +678,16 @@ QLineEdit {
                     </size>
                    </property>
                    <property name="text">
-                    <string>登录</string>
+                    <string>生成一键登录文件</string>
                    </property>
                    <property name="icon">
                     <iconset resource="window.qrc">
-                     <normaloff>:/images/images/login.png</normaloff>:/images/images/login.png</iconset>
+                     <normaloff>:/images/images/main.png</normaloff>:/images/images/main.png</iconset>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton_dislogin">
+                  <widget class="QPushButton" name="pushButton_keeplogin">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                      <horstretch>0</horstretch>
@@ -387,457 +696,347 @@ QLineEdit {
                    </property>
                    <property name="minimumSize">
                     <size>
-                     <width>120</width>
+                     <width>0</width>
                      <height>30</height>
                     </size>
                    </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>40</height>
-                    </size>
-                   </property>
                    <property name="text">
-                    <string>下线</string>
+                    <string>保持网络在线</string>
                    </property>
                    <property name="icon">
-                    <iconset>
-                     <normaloff>:/images/images/logout.png</normaloff>:/images/images/logout.png</iconset>
+                    <iconset resource="window.qrc">
+                     <normaloff>:/images/images/关.png</normaloff>
+                     <normalon>:/images/images/开关.png</normalon>:/images/images/关.png</iconset>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>25</width>
+                     <height>25</height>
+                    </size>
+                   </property>
+                   <property name="checkable">
+                    <bool>true</bool>
                    </property>
                   </widget>
                  </item>
+                 <item>
+                  <widget class="QFrame" name="frame_netstatus">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>30</height>
+                    </size>
+                   </property>
+                   <property name="styleSheet">
+                    <string notr="true">border-radius: 5px;</string>
+                   </property>
+                   <property name="frameShape">
+                    <enum>QFrame::Shape::StyledPanel</enum>
+                   </property>
+                   <property name="frameShadow">
+                    <enum>QFrame::Shadow::Raised</enum>
+                   </property>
+                   <layout class="QHBoxLayout" name="horizontalLayout_7">
+                    <property name="spacing">
+                     <number>0</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QStackedWidget" name="stackedWidget_message_netstatus">
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>30</height>
+                       </size>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true"/>
+                      </property>
+                      <property name="currentIndex">
+                       <number>0</number>
+                      </property>
+                      <widget class="QWidget" name="black_text_2">
+                       <property name="minimumSize">
+                        <size>
+                         <width>0</width>
+                         <height>0</height>
+                        </size>
+                       </property>
+                       <widget class="QLabel" name="label_black_message_2">
+                        <property name="geometry">
+                         <rect>
+                          <x>0</x>
+                          <y>0</y>
+                          <width>220</width>
+                          <height>30</height>
+                         </rect>
+                        </property>
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>0</height>
+                         </size>
+                        </property>
+                        <property name="styleSheet">
+                         <string notr="true">color: rgb(0, 0, 0);
+font: 11pt &quot;黑体&quot;;</string>
+                        </property>
+                        <property name="text">
+                         <string>   检测中...</string>
+                        </property>
+                        <property name="alignment">
+                         <set>Qt::AlignmentFlag::AlignCenter</set>
+                        </property>
+                       </widget>
+                       <widget class="QLabel" name="labe_netstatus">
+                        <property name="geometry">
+                         <rect>
+                          <x>10</x>
+                          <y>0</y>
+                          <width>65</width>
+                          <height>30</height>
+                         </rect>
+                        </property>
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                          <horstretch>25</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="text">
+                         <string>网络状态：</string>
+                        </property>
+                       </widget>
+                      </widget>
+                      <widget class="QWidget" name="green_text_2">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="styleSheet">
+                        <string notr="true">background-color: rgb(200, 255, 164);</string>
+                       </property>
+                       <widget class="QLabel" name="label_green_message_2">
+                        <property name="geometry">
+                         <rect>
+                          <x>0</x>
+                          <y>0</y>
+                          <width>220</width>
+                          <height>30</height>
+                         </rect>
+                        </property>
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>0</height>
+                         </size>
+                        </property>
+                        <property name="styleSheet">
+                         <string notr="true">color: rgb(0, 255, 0);
+font: 11pt &quot;黑体&quot;;</string>
+                        </property>
+                        <property name="text">
+                         <string>已在线</string>
+                        </property>
+                        <property name="alignment">
+                         <set>Qt::AlignmentFlag::AlignCenter</set>
+                        </property>
+                       </widget>
+                       <widget class="QLabel" name="labe_netstatus_2">
+                        <property name="geometry">
+                         <rect>
+                          <x>10</x>
+                          <y>0</y>
+                          <width>65</width>
+                          <height>30</height>
+                         </rect>
+                        </property>
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                          <horstretch>25</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="text">
+                         <string>网络状态：</string>
+                        </property>
+                       </widget>
+                      </widget>
+                      <widget class="QWidget" name="red_text_2">
+                       <property name="styleSheet">
+                        <string notr="true">background-color: rgb(255, 190, 191);</string>
+                       </property>
+                       <widget class="QLabel" name="label_red_message_2">
+                        <property name="geometry">
+                         <rect>
+                          <x>0</x>
+                          <y>0</y>
+                          <width>220</width>
+                          <height>30</height>
+                         </rect>
+                        </property>
+                        <property name="minimumSize">
+                         <size>
+                          <width>0</width>
+                          <height>0</height>
+                         </size>
+                        </property>
+                        <property name="styleSheet">
+                         <string notr="true">color:rgb(255, 0, 0);
+font: 11pt &quot;黑体&quot;;</string>
+                        </property>
+                        <property name="text">
+                         <string>离线中</string>
+                        </property>
+                        <property name="alignment">
+                         <set>Qt::AlignmentFlag::AlignCenter</set>
+                        </property>
+                       </widget>
+                       <widget class="QLabel" name="labe_netstatus_3">
+                        <property name="geometry">
+                         <rect>
+                          <x>10</x>
+                          <y>0</y>
+                          <width>65</width>
+                          <height>30</height>
+                         </rect>
+                        </property>
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                          <horstretch>25</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                        <property name="text">
+                         <string>网络状态：</string>
+                        </property>
+                       </widget>
+                      </widget>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="verticalSpacer_leftbottom">
+                   <property name="orientation">
+                    <enum>Qt::Orientation::Vertical</enum>
+                   </property>
+                   <property name="sizeType">
+                    <enum>QSizePolicy::Policy::Expanding</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>143</width>
+                     <height>56</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
                 </layout>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pushButton_generate">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>120</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>40</height>
-                  </size>
-                 </property>
-                 <property name="text">
-                  <string>生成一键登录文件</string>
-                 </property>
-                 <property name="icon">
-                  <iconset resource="window.qrc">
-                   <normaloff>:/images/images/main.png</normaloff>:/images/images/main.png</iconset>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QStackedWidget" name="stackedWidget_message">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                 <property name="maximumSize">
-                  <size>
-                   <width>16777215</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">QLabel{
-	font: 10pt &quot;微软雅黑&quot;;
-}</string>
-                 </property>
-                 <property name="currentIndex">
-                  <number>2</number>
-                 </property>
-                 <widget class="QWidget" name="black_text">
-                  <property name="minimumSize">
-                   <size>
-                    <width>0</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                  <widget class="QLabel" name="label_black_message">
-                   <property name="geometry">
-                    <rect>
-                     <x>0</x>
-                     <y>0</y>
-                     <width>281</width>
-                     <height>35</height>
-                    </rect>
-                   </property>
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">color: rgb(0, 0, 0);</string>
-                   </property>
-                   <property name="text">
-                    <string>登录中...</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </widget>
-                 <widget class="QWidget" name="green_text">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <widget class="QLabel" name="label_green_message">
-                   <property name="geometry">
-                    <rect>
-                     <x>0</x>
-                     <y>0</y>
-                     <width>281</width>
-                     <height>35</height>
-                    </rect>
-                   </property>
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">color: rgb(0, 255, 0);</string>
-                   </property>
-                   <property name="text">
-                    <string>登录成功！</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </widget>
-                 <widget class="QWidget" name="red_text">
-                  <widget class="QLabel" name="label_red_message">
-                   <property name="geometry">
-                    <rect>
-                     <x>0</x>
-                     <y>0</y>
-                     <width>281</width>
-                     <height>35</height>
-                    </rect>
-                   </property>
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">color:rgb(255, 0, 0);</string>
-                   </property>
-                   <property name="text">
-                    <string>登录失败！</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignmentFlag::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </widget>
-                </widget>
-               </item>
-               <item>
-                <spacer name="verticalSpacer">
-                 <property name="orientation">
-                  <enum>Qt::Orientation::Vertical</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>40</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QFrame" name="frame_netstatus">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>30</height>
-                  </size>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true">border-radius: 5px;</string>
-                 </property>
-                 <property name="frameShape">
-                  <enum>QFrame::Shape::StyledPanel</enum>
-                 </property>
-                 <property name="frameShadow">
-                  <enum>QFrame::Shadow::Raised</enum>
-                 </property>
-                 <widget class="QStackedWidget" name="stackedWidget_message_netstatus">
-                  <property name="geometry">
-                   <rect>
-                    <x>0</x>
-                    <y>0</y>
-                    <width>279</width>
-                    <height>30</height>
-                   </rect>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>0</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>16777215</width>
-                    <height>30</height>
-                   </size>
-                  </property>
-                  <property name="styleSheet">
-                   <string notr="true">QLabel{
-	font: 10pt &quot;微软雅黑&quot;;
-}
-</string>
-                  </property>
-                  <property name="currentIndex">
-                   <number>1</number>
-                  </property>
-                  <widget class="QWidget" name="black_text_2">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <widget class="QLabel" name="label_black_message_2">
-                    <property name="geometry">
-                     <rect>
-                      <x>0</x>
-                      <y>0</y>
-                      <width>281</width>
-                      <height>35</height>
-                     </rect>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">color: rgb(0, 0, 0);</string>
-                    </property>
-                    <property name="text">
-                     <string>检测中...</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignmentFlag::AlignCenter</set>
-                    </property>
-                   </widget>
-                   <widget class="QLabel" name="labe_netstatus">
-                    <property name="geometry">
-                     <rect>
-                      <x>0</x>
-                      <y>0</y>
-                      <width>71</width>
-                      <height>35</height>
-                     </rect>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>25</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>网络状态：</string>
-                    </property>
-                   </widget>
-                  </widget>
-                  <widget class="QWidget" name="green_text_2">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="styleSheet">
-                    <string notr="true">background-color: rgb(200, 255, 164);</string>
-                   </property>
-                   <widget class="QLabel" name="label_green_message_2">
-                    <property name="geometry">
-                     <rect>
-                      <x>0</x>
-                      <y>0</y>
-                      <width>281</width>
-                      <height>35</height>
-                     </rect>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">color: rgb(0, 255, 0);</string>
-                    </property>
-                    <property name="text">
-                     <string>已在线</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignmentFlag::AlignCenter</set>
-                    </property>
-                   </widget>
-                   <widget class="QLabel" name="labe_netstatus_2">
-                    <property name="geometry">
-                     <rect>
-                      <x>0</x>
-                      <y>0</y>
-                      <width>71</width>
-                      <height>35</height>
-                     </rect>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>25</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>网络状态：</string>
-                    </property>
-                   </widget>
-                  </widget>
-                  <widget class="QWidget" name="red_text_2">
-                   <property name="styleSheet">
-                    <string notr="true">background-color: rgb(255, 190, 191);</string>
-                   </property>
-                   <widget class="QLabel" name="label_red_message_2">
-                    <property name="geometry">
-                     <rect>
-                      <x>0</x>
-                      <y>0</y>
-                      <width>281</width>
-                      <height>35</height>
-                     </rect>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">color:rgb(255, 0, 0);</string>
-                    </property>
-                    <property name="text">
-                     <string>离线中</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignmentFlag::AlignCenter</set>
-                    </property>
-                   </widget>
-                   <widget class="QLabel" name="labe_netstatus_3">
-                    <property name="geometry">
-                     <rect>
-                      <x>0</x>
-                      <y>0</y>
-                      <width>71</width>
-                      <height>35</height>
-                     </rect>
-                    </property>
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                      <horstretch>25</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>网络状态：</string>
-                    </property>
-                   </widget>
-                  </widget>
-                 </widget>
-                </widget>
-               </item>
-              </layout>
-             </widget>
+               </widget>
+              </item>
+             </layout>
             </widget>
            </item>
            <item>
-            <widget class="QTextBrowser" name="textBrowser_log">
+            <widget class="QFrame" name="frame_right">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-               <horstretch>0</horstretch>
+               <horstretch>1</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
-             <property name="font">
-              <font>
-               <family>Consolas</family>
-              </font>
+             <property name="frameShape">
+              <enum>QFrame::Shape::StyledPanel</enum>
              </property>
-             <property name="styleSheet">
-              <string notr="true">background-color: rgb(223, 223, 223);
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Raised</enum>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_2">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <item row="0" column="0">
+               <widget class="QTextBrowser" name="textBrowser_log">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="font">
+                 <font>
+                  <family>微软雅黑</family>
+                  <pointsize>10</pointsize>
+                  <italic>false</italic>
+                  <bold>false</bold>
+                 </font>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">background-color: rgb(223, 223, 223);
 border:2px solid rgb(162, 162, 162);
-b</string>
-             </property>
+border-radius:5px;</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </widget>
            </item>
           </layout>
          </widget>
         </widget>
         <widget class="QWidget" name="page_manege">
-         <widget class="QFrame" name="frame_2">
+         <widget class="QFrame" name="frame_manege">
           <property name="geometry">
            <rect>
             <x>0</x>
@@ -852,54 +1051,174 @@ b</string>
           <property name="frameShadow">
            <enum>QFrame::Shadow::Raised</enum>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_4">
+          <layout class="QVBoxLayout" name="verticalLayout_3">
            <item>
-            <widget class="QSplitter" name="splitter">
-             <property name="orientation">
-              <enum>Qt::Orientation::Horizontal</enum>
+            <widget class="QFrame" name="frame_timefile">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>30</height>
+              </size>
              </property>
-             <widget class="QTimeEdit" name="time_edit">
-              <property name="displayFormat">
-               <string>HH:mm:ss</string>
+             <property name="frameShape">
+              <enum>QFrame::Shape::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Raised</enum>
+             </property>
+             <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="1,4,1">
+              <property name="leftMargin">
+               <number>0</number>
               </property>
-             </widget>
-             <widget class="QLineEdit" name="file_path_edit"/>
-             <widget class="QPushButton" name="select_file_btn">
-              <property name="text">
-               <string>选择文件</string>
+              <property name="topMargin">
+               <number>0</number>
               </property>
-             </widget>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QTimeEdit" name="time_edit">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="displayFormat">
+                 <string>HH:mm:ss</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="file_path_edit">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="select_file_btn">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>选择文件</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </widget>
            </item>
            <item>
             <widget class="QLabel" name="task_name_label">
+             <property name="lineWidth">
+              <number>1</number>
+             </property>
+             <property name="midLineWidth">
+              <number>0</number>
+             </property>
              <property name="text">
               <string>文件名：</string>
              </property>
              <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
+              <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+             </property>
+             <property name="margin">
+              <number>0</number>
+             </property>
+             <property name="indent">
+              <number>0</number>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="create_btn">
-             <property name="text">
-              <string>创建任务</string>
+            <widget class="QFrame" name="frame_task_btn">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
              </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="query_btn">
-             <property name="text">
-              <string>查询任务</string>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>30</height>
+              </size>
              </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="delete_btn">
-             <property name="text">
-              <string>删除任务</string>
+             <property name="frameShape">
+              <enum>QFrame::Shape::StyledPanel</enum>
              </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Raised</enum>
+             </property>
+             <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QPushButton" name="create_btn">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>创建任务</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="delete_btn">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>删除任务</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="query_btn">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>查询任务</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </widget>
            </item>
            <item>
@@ -991,9 +1310,21 @@ b</string>
        <height>30</height>
       </rect>
      </property>
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="minimumSize">
       <size>
        <width>0</width>
+       <height>30</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
        <height>30</height>
       </size>
      </property>
@@ -1001,17 +1332,7 @@ b</string>
       <enum>Qt::ContextMenuPolicy::ActionsContextMenu</enum>
      </property>
      <property name="styleSheet">
-      <string notr="true">QPushButton{
-	background-color: rgba(255, 255, 255, 0);
-}
-QPushButton:hover {
-	padding-bottom: 8px;
-	padding-left:8px;
-}
-QPushButton:pressed{
-	padding-top:3px;
-	padding-right:3px;
-}
+      <string notr="true">
 #pushButtom_title {
 	font: 10pt &quot;微软雅黑&quot;;
     padding: 0;
@@ -1048,10 +1369,22 @@ QPushButton:pressed{
       <item>
        <widget class="QPushButton" name="pushButtom_title">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>25</height>
+         </size>
         </property>
         <property name="styleSheet">
          <string notr="true">margin-left: 10px;</string>
@@ -1087,16 +1420,25 @@ QPushButton:pressed{
       <item>
        <widget class="QPushButton" name="pushButton_minizing">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
         <property name="minimumSize">
          <size>
-          <width>0</width>
-          <height>0</height>
+          <width>20</width>
+          <height>20</height>
          </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>25</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="mouseTracking">
+         <bool>true</bool>
         </property>
         <property name="text">
          <string/>
@@ -1123,9 +1465,18 @@ QPushButton:pressed{
         </property>
         <property name="minimumSize">
          <size>
-          <width>0</width>
-          <height>0</height>
+          <width>20</width>
+          <height>20</height>
          </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>25</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="mouseTracking">
+         <bool>true</bool>
         </property>
         <property name="styleSheet">
          <string notr="true"/>
@@ -1139,8 +1490,8 @@ QPushButton:pressed{
         </property>
         <property name="iconSize">
          <size>
-          <width>20</width>
-          <height>20</height>
+          <width>23</width>
+          <height>23</height>
          </size>
         </property>
        </widget>

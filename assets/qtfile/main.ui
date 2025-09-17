@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
+ <author>quanmianup</author>
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>652</width>
-    <height>554</height>
+    <width>709</width>
+    <height>584</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -72,7 +73,6 @@ QPushButton:pressed{
 #widget {
 	background-color: white;
 	border-radius: 5px;
-	box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 1);
 	border: 1px solid rgb(204, 204, 204); 
 }</string>
     </property>
@@ -1016,16 +1016,47 @@ font: 11pt &quot;黑体&quot;;</string>
                 </property>
                 <property name="font">
                  <font>
-                  <family>微软雅黑</family>
+                  <family>Consolas</family>
                   <pointsize>10</pointsize>
                   <italic>false</italic>
                   <bold>false</bold>
                  </font>
                 </property>
+                <property name="contextMenuPolicy">
+                 <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                </property>
                 <property name="styleSheet">
-                 <string notr="true">background-color: rgb(223, 223, 223);
-border:2px solid rgb(162, 162, 162);
-border-radius:5px;</string>
+                 <string notr="true">#textBrowser_log {
+	background-color: rgb(223, 223, 223);
+	border:2px solid rgb(162, 162, 162);
+	border-radius:5px;
+	font: 10pt &quot;Consolas&quot;;
+}</string>
+                </property>
+                <property name="tabChangesFocus">
+                 <bool>true</bool>
+                </property>
+                <property name="documentTitle">
+                 <string/>
+                </property>
+                <property name="markdown">
+                 <string/>
+                </property>
+                <property name="html">
+                 <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: &quot;\2610&quot;; }
+li.checked::marker { content: &quot;\2612&quot;; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Consolas'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="textInteractionFlags">
+                 <set>Qt::TextInteractionFlag::NoTextInteraction</set>
+                </property>
+                <property name="openExternalLinks">
+                 <bool>true</bool>
                 </property>
                </widget>
               </item>
@@ -1500,7 +1531,60 @@ border-radius:5px;</string>
     </widget>
    </widget>
   </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>709</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menulogMenu">
+    <property name="tearOffEnabled">
+     <bool>false</bool>
+    </property>
+    <property name="title">
+     <string>logMenu</string>
+    </property>
+    <addaction name="action_clear_log"/>
+   </widget>
+   <addaction name="menulogMenu"/>
+  </widget>
+  <action name="action_clear_log">
+   <property name="text">
+    <string>清空输出</string>
+   </property>
+   <property name="toolTip">
+    <string>清空日志组件内容</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
  </widget>
+ <tabstops>
+  <tabstop>lineEdit_username</tabstop>
+  <tabstop>lineEdit_password</tabstop>
+  <tabstop>checkBox</tabstop>
+  <tabstop>pushButton_login</tabstop>
+  <tabstop>pushButton_dislogin</tabstop>
+  <tabstop>pushButton_generate</tabstop>
+  <tabstop>pushButton_keeplogin</tabstop>
+  <tabstop>pushButton_tab_main</tabstop>
+  <tabstop>pushButton_tab_manege</tabstop>
+  <tabstop>pushButtom_title</tabstop>
+  <tabstop>pushButton_minizing</tabstop>
+  <tabstop>pushButton_close</tabstop>
+  <tabstop>textBrowser_log</tabstop>
+  <tabstop>create_btn</tabstop>
+  <tabstop>delete_btn</tabstop>
+  <tabstop>query_btn</tabstop>
+  <tabstop>task_table</tabstop>
+  <tabstop>select_file_btn</tabstop>
+  <tabstop>time_edit</tabstop>
+  <tabstop>file_path_edit</tabstop>
+ </tabstops>
  <resources>
   <include location="window.qrc"/>
  </resources>
@@ -1512,11 +1596,11 @@ border-radius:5px;</string>
    <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>671</x>
-     <y>94</y>
+     <x>590</x>
+     <y>28</y>
     </hint>
     <hint type="destinationlabel">
-     <x>738</x>
+     <x>651</x>
      <y>59</y>
     </hint>
    </hints>
@@ -1528,8 +1612,8 @@ border-radius:5px;</string>
    <slot>showMinimized()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>619</x>
-     <y>88</y>
+     <x>545</x>
+     <y>28</y>
     </hint>
     <hint type="destinationlabel">
      <x>640</x>

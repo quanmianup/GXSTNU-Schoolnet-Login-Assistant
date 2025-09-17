@@ -17,6 +17,7 @@ venv/
 # 开发环境文件
 .idea/
 .vscode/
+.trae/
 __pycache__/
 *.code-workspace
 

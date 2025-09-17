@@ -1,5 +1,5 @@
-from concurrent.futures import ThreadPoolExecutor
 from PySide6.QtCore import QObject, Signal
+from concurrent.futures import ThreadPoolExecutor
 import logging
 
 logger = logging.getLogger(__name__)

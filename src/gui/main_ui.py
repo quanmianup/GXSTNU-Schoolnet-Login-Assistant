@@ -11,23 +11,24 @@
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
     QSize, QTime, QUrl, Qt)
-from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
-    QFont, QFontDatabase, QGradient, QIcon,
-    QImage, QKeySequence, QLinearGradient, QPainter,
-    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
+    QCursor, QFont, QFontDatabase, QGradient,
+    QIcon, QImage, QKeySequence, QLinearGradient,
+    QPainter, QPalette, QPixmap, QRadialGradient,
+    QTransform)
 from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplication, QCheckBox,
     QFrame, QGridLayout, QHBoxLayout, QHeaderView,
     QLabel, QLayout, QLineEdit, QMainWindow,
-    QPushButton, QSizePolicy, QSpacerItem, QStackedWidget,
-    QTableWidget, QTableWidgetItem, QTextBrowser, QTimeEdit,
-    QVBoxLayout, QWidget)
+    QMenu, QMenuBar, QPushButton, QSizePolicy,
+    QSpacerItem, QStackedWidget, QTableWidget, QTableWidgetItem,
+    QTextBrowser, QTimeEdit, QVBoxLayout, QWidget)
 import window_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(652, 554)
+        MainWindow.resize(709, 584)
         MainWindow.setMinimumSize(QSize(4, 0))
         MainWindow.setTabletTracking(False)
         icon = QIcon()
@@ -38,6 +39,9 @@ class Ui_MainWindow(object):
         MainWindow.setDocumentMode(False)
         MainWindow.setUnifiedTitleAndToolBarOnMac(False)
         MainWindow.setProperty(u"frameless", True)
+        self.action_clear_log = QAction(MainWindow)
+        self.action_clear_log.setObjectName(u"action_clear_log")
+        self.action_clear_log.setMenuRole(QAction.MenuRole.NoRole)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.widget = QWidget(self.centralwidget)
@@ -61,7 +65,6 @@ class Ui_MainWindow(object):
 "#widget {\n"
 "	background-color: white;\n"
 "	border-radius: 5px;\n"
-"	box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 1);\n"
 "	border: 1px solid rgb(204, 204, 204); \n"
 "}")
         self.frame_main = QFrame(self.widget)
@@ -445,14 +448,21 @@ class Ui_MainWindow(object):
         sizePolicy2.setHeightForWidth(self.textBrowser_log.sizePolicy().hasHeightForWidth())
         self.textBrowser_log.setSizePolicy(sizePolicy2)
         font = QFont()
-        font.setFamilies([u"\u5fae\u8f6f\u96c5\u9ed1"])
+        font.setFamilies([u"Consolas"])
         font.setPointSize(10)
         font.setBold(False)
         font.setItalic(False)
         self.textBrowser_log.setFont(font)
-        self.textBrowser_log.setStyleSheet(u"background-color: rgb(223, 223, 223);\n"
-"border:2px solid rgb(162, 162, 162);\n"
-"border-radius:5px;")
+        self.textBrowser_log.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.textBrowser_log.setStyleSheet(u"#textBrowser_log {\n"
+"	background-color: rgb(223, 223, 223);\n"
+"	border:2px solid rgb(162, 162, 162);\n"
+"	border-radius:5px;\n"
+"	font: 10pt \"Consolas\";\n"
+"}")
+        self.textBrowser_log.setTabChangesFocus(True)
+        self.textBrowser_log.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
+        self.textBrowser_log.setOpenExternalLinks(True)
 
         self.gridLayout_2.addWidget(self.textBrowser_log, 0, 0, 1, 1)
 
@@ -658,6 +668,35 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addWidget(self.pushButton_close)
 
         MainWindow.setCentralWidget(self.centralwidget)
+        self.menuBar = QMenuBar(MainWindow)
+        self.menuBar.setObjectName(u"menuBar")
+        self.menuBar.setGeometry(QRect(0, 0, 709, 22))
+        self.menulogMenu = QMenu(self.menuBar)
+        self.menulogMenu.setObjectName(u"menulogMenu")
+        self.menulogMenu.setTearOffEnabled(False)
+        MainWindow.setMenuBar(self.menuBar)
+        QWidget.setTabOrder(self.lineEdit_username, self.lineEdit_password)
+        QWidget.setTabOrder(self.lineEdit_password, self.checkBox)
+        QWidget.setTabOrder(self.checkBox, self.pushButton_login)
+        QWidget.setTabOrder(self.pushButton_login, self.pushButton_dislogin)
+        QWidget.setTabOrder(self.pushButton_dislogin, self.pushButton_generate)
+        QWidget.setTabOrder(self.pushButton_generate, self.pushButton_keeplogin)
+        QWidget.setTabOrder(self.pushButton_keeplogin, self.pushButton_tab_main)
+        QWidget.setTabOrder(self.pushButton_tab_main, self.pushButton_tab_manege)
+        QWidget.setTabOrder(self.pushButton_tab_manege, self.pushButtom_title)
+        QWidget.setTabOrder(self.pushButtom_title, self.pushButton_minizing)
+        QWidget.setTabOrder(self.pushButton_minizing, self.pushButton_close)
+        QWidget.setTabOrder(self.pushButton_close, self.textBrowser_log)
+        QWidget.setTabOrder(self.textBrowser_log, self.create_btn)
+        QWidget.setTabOrder(self.create_btn, self.delete_btn)
+        QWidget.setTabOrder(self.delete_btn, self.query_btn)
+        QWidget.setTabOrder(self.query_btn, self.task_table)
+        QWidget.setTabOrder(self.task_table, self.select_file_btn)
+        QWidget.setTabOrder(self.select_file_btn, self.time_edit)
+        QWidget.setTabOrder(self.time_edit, self.file_path_edit)
+
+        self.menuBar.addAction(self.menulogMenu.menuAction())
+        self.menulogMenu.addAction(self.action_clear_log)
 
         self.retranslateUi(MainWindow)
         self.pushButton_close.clicked.connect(MainWindow.close)
@@ -673,6 +712,10 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"\u5e7f\u897f\u79d1\u5e08\u6821\u56ed\u7f51\u767b\u5f55\u52a9\u624b", None))
+        self.action_clear_log.setText(QCoreApplication.translate("MainWindow", u"\u6e05\u7a7a\u8f93\u51fa", None))
+#if QT_CONFIG(tooltip)
+        self.action_clear_log.setToolTip(QCoreApplication.translate("MainWindow", u"\u6e05\u7a7a\u65e5\u5fd7\u7ec4\u4ef6\u5185\u5bb9", None))
+#endif // QT_CONFIG(tooltip)
         self.pushButton_tab_main.setText(QCoreApplication.translate("MainWindow", u"\u9996\u9875", None))
         self.pushButton_tab_manege.setText(QCoreApplication.translate("MainWindow", u"\u5b9a\u65f6\u4efb\u52a1\u7ba1\u7406", None))
         self.lineEdit_username.setText("")
@@ -692,6 +735,16 @@ class Ui_MainWindow(object):
         self.labe_netstatus_2.setText(QCoreApplication.translate("MainWindow", u"\u7f51\u7edc\u72b6\u6001\uff1a", None))
         self.label_red_message_2.setText(QCoreApplication.translate("MainWindow", u"\u79bb\u7ebf\u4e2d", None))
         self.labe_netstatus_3.setText(QCoreApplication.translate("MainWindow", u"\u7f51\u7edc\u72b6\u6001\uff1a", None))
+        self.textBrowser_log.setDocumentTitle("")
+        self.textBrowser_log.setMarkdown("")
+        self.textBrowser_log.setHtml(QCoreApplication.translate("MainWindow", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"hr { height: 1px; border-width: 0; }\n"
+"li.unchecked::marker { content: \"\\2610\"; }\n"
+"li.checked::marker { content: \"\\2612\"; }\n"
+"</style></head><body style=\" font-family:'Consolas'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>", None))
         self.time_edit.setDisplayFormat(QCoreApplication.translate("MainWindow", u"HH:mm:ss", None))
         self.select_file_btn.setText(QCoreApplication.translate("MainWindow", u"\u9009\u62e9\u6587\u4ef6", None))
         self.task_name_label.setText(QCoreApplication.translate("MainWindow", u"\u6587\u4ef6\u540d\uff1a", None))
@@ -701,5 +754,6 @@ class Ui_MainWindow(object):
         self.pushButtom_title.setText(QCoreApplication.translate("MainWindow", u"\u5e7f\u897f\u79d1\u5e08\u6821\u56ed\u7f51\u767b\u5f55\u52a9\u624b", None))
         self.pushButton_minizing.setText("")
         self.pushButton_close.setText("")
+        self.menulogMenu.setTitle(QCoreApplication.translate("MainWindow", u"logMenu", None))
     # retranslateUi
 

@@ -8,8 +8,8 @@ import sys
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QPoint, QTime, QEvent
-from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QTableWidgetItem
-# from cx_Freeze import setup, Executable
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QTableWidgetItem, QMenu
 
 from src.core.AsyncTaskExecutor import AsyncTaskExecutor
 from src.core.network import networkmanager
@@ -18,33 +18,6 @@ from src.utils.logger import logger, setup_logger
 from src.utils.task_manager import TaskManager
 from config.credentials import credentials
 
-
-def generate_exe_with_cx_freeze(script_path, exe_name, output_dir):
-    base = None
-    if sys.platform == "win32":
-        # 如果不需要控制台窗口，使用 "Win32GUI"
-        base = "Win32GUI" if not sys.platform.startswith('win') else None
-    else:
-        base = None
-
-    build_exe_options = {
-        "packages": ["app", "app.core", "app.utils", "requests"],
-        "include_files": [("config", "config"), ("app", "app")],
-        "excludes": ["tkinter", "unittest"],  # 排除不需要的模块，减小包体积
-        "include_msvcr": True  # 包含 Microsoft Visual C++ 运行时库
-    }
-
-    try:
-        setup(
-            name=exe_name,
-            version="0.1",
-            description="Auto Login EXE",
-            options={"build_exe": build_exe_options},
-            executables=[Executable(script_path, base=base, target_name=exe_name)]
-        )
-    except Exception as e:
-        logger.error(f"cx_Freeze 生成 EXE 文件失败: {str(e)}")
-        raise
 
 
 class MainWindow(QMainWindow):
@@ -66,8 +39,14 @@ class MainWindow(QMainWindow):
         self.task_manager = TaskManager()
         self.task_executor = AsyncTaskExecutor()
         self.task_executor.finished.connect(self.handle_general_finished)
+        
+        # 设置界面日志输出，连接到右侧的日志控件
+        setup_logger(log_widget=self.ui.textBrowser_log)
+        
+        # 设置日志控件的右键清空日志菜单
+        self.setup_log_context_menu()
 
-        self._setup_ui()
+        self._init_ui_connect_()
 
         # 初始化拖动相关变量
         self.dragging = False
@@ -75,6 +54,45 @@ class MainWindow(QMainWindow):
 
         # 为标题栏添加事件过滤器
         self.ui.frame_title.installEventFilter(self)
+
+    def setup_log_context_menu(self):
+        """
+        设置日志控件的右键菜单
+        """
+        self.ui.menuBar.hide()
+        
+        # 直接使用lambda表达式显示右键菜单，避免单独的show_log_context_menu方法
+        self.ui.textBrowser_log.customContextMenuRequested.connect(
+            lambda position: self.ui.menulogMenu.exec_(self.ui.textBrowser_log.mapToGlobal(position))
+        )
+        # 连接action_clear_log的triggered信号到清空日志的槽函数
+        self.ui.action_clear_log.triggered.connect(self.ui.textBrowser_log.clear)
+    
+    def _init_ui_connect_(self):
+        """
+        初始化 UI 组件的事件连接。
+        """
+        self.ui.select_file_btn.clicked.connect(self.select_file)
+        self.ui.create_btn.clicked.connect(self.create_task_async)
+        self.ui.query_btn.clicked.connect(self.query_tasks_async)
+        self.ui.delete_btn.clicked.connect(self.delete_task_async)
+        self.ui.pushButton_generate.clicked.connect(self.create_exe)
+        self.ui.task_table.setColumnCount(4)
+        self.ui.task_table.horizontalHeader().setVisible(True)
+        self.ui.task_table.setHorizontalHeaderLabels(
+            ["任务名称", "文件路径", "状态", "下次运行时间"])
+        self.ui.task_table.horizontalHeader().setDefaultAlignment(
+            Qt.AlignLeft | Qt.AlignVCenter)
+
+        self.ui.pushButton_login.clicked.connect(self.login)
+        self.ui.pushButton_dislogin.clicked.connect(self.dislogin)
+        self.ui.pushButton_tab_main.clicked.connect(
+            lambda: self.ui.stackedWidget_tab.setCurrentIndex(0))
+        self.ui.pushButton_tab_manege.clicked.connect(
+            lambda: (
+                self.ui.stackedWidget_tab.setCurrentIndex(1),
+                self.query_tasks_async()
+            ))
 
     def eventFilter(self, obj, event):
         """
@@ -111,32 +129,6 @@ class MainWindow(QMainWindow):
         if event.button() == Qt.LeftButton:
             self.dragging = False
 
-    def _setup_ui(self):
-        """
-        初始化 UI 组件的事件连接。
-        """
-        self.ui.select_file_btn.clicked.connect(self.select_file)
-        self.ui.create_btn.clicked.connect(self.create_task_async)
-        self.ui.query_btn.clicked.connect(self.query_tasks_async)
-        self.ui.delete_btn.clicked.connect(self.delete_task_async)
-        self.ui.pushButton_generate.clicked.connect(self.create_exe)
-        self.ui.task_table.setColumnCount(4)
-        self.ui.task_table.horizontalHeader().setVisible(True)
-        self.ui.task_table.setHorizontalHeaderLabels(
-            ["任务名称", "文件路径", "状态", "下次运行时间"])
-        self.ui.task_table.horizontalHeader().setDefaultAlignment(
-            Qt.AlignLeft | Qt.AlignVCenter)
-
-        self.ui.pushButton_login.clicked.connect(self.login)
-        self.ui.pushButton_dislogin.clicked.connect(self.dislogin)
-        self.ui.pushButton_tab_main.clicked.connect(
-            lambda: self.ui.stackedWidget_tab.setCurrentIndex(0))
-        self.ui.pushButton_tab_manege.clicked.connect(
-            lambda: (
-                self.ui.stackedWidget_tab.setCurrentIndex(1),
-                self.query_tasks_async()
-            ))
-
     def save_credentials(self):
         """
         保存用户凭证到配置文件。
@@ -154,19 +146,24 @@ class MainWindow(QMainWindow):
         """
         result = message
         try:
-            # 尝试解析 message 获取 op_type 和 result
-            parsed_op_type, result = eval(message)
-            # 如果解析成功，使用解析后的 op_type
-            op_type = parsed_op_type
-        except Exception as e:
-            logger.error(f"解析异步任务结果失败: {e}")
-            QMessageBox.critical(self, "错误", f"解析异步任务结果失败: {e}")
-            if op_type == "login":
-                self.show_login_result(False, False)  # 强制标记登录失败
-            self._restore_button_state(op_type)
-            if op_type == "dislogin":
-                self.show_dislogin_result(False, False)
-            return
+            # 尝试解析 message 获取 op_type 和 result，如果失败则保持原样
+            if message.startswith('(') and ')' in message and ',' in message:
+                # 简单的手动解析，避免使用eval
+                parts = message[1:-1].split(',', 1)
+                if len(parts) == 2:
+                    parsed_op_type = parts[0].strip().strip('"\'')
+                    result_part = parts[1].strip()
+                    # 尝试转换result_part为布尔值
+                    if result_part.lower() == 'true':
+                        result = True
+                    elif result_part.lower() == 'false':
+                        result = False
+                    else:
+                        result = result_part
+                    op_type = parsed_op_type
+        except Exception:
+            # 如果解析失败，不报错，继续使用原始值
+            pass
 
         try:
             if op_type == "login":
@@ -204,7 +201,7 @@ class MainWindow(QMainWindow):
         """
         显示登录结果信息。
         """
-        if result:
+        if success:
             self.ui.label_green_message.setText("登录成功！")
             self.ui.stackedWidget_message.setCurrentIndex(1)
         else:
@@ -214,13 +211,13 @@ class MainWindow(QMainWindow):
 
     def show_dislogin_result(self, success, result):
         """
-        显示登出结果信息。
+        显示下线结果信息。
         """
-        if result:
-            self.ui.label_green_message.setText("登出成功！")
+        if success:
+            self.ui.label_green_message.setText("下线成功！")
             self.ui.stackedWidget_message.setCurrentIndex(1)
         else:
-            self.ui.label_red_message.setText("登出失败")
+            self.ui.label_red_message.setText("下线失败")
             self.ui.stackedWidget_message.setCurrentIndex(2)
         self.ui.pushButton_dislogin.setEnabled(True)
 
@@ -244,7 +241,7 @@ class MainWindow(QMainWindow):
 
     def dislogin(self):
         """
-        执行登出操作。
+        执行下线操作。
         """
         self.ui.stackedWidget_message.setCurrentIndex(0)
         self.ui.label_black_message.setText("下线中...")

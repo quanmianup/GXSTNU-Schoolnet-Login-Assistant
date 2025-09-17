@@ -65,7 +65,7 @@ class NetworkManager:
         实现单例模式，确保类只有一个实例被创建。
 
         Returns:
-            NetworkManager: 类的唯一实例。
+            networkmanager: 类的唯一实例。
         """
         if cls._instance is None:
             # 若实例不存在，则创建一个新实例
@@ -143,7 +143,11 @@ class NetworkManager:
                 'test_url': self.TEST_URL,
             }
         except Exception as e:
-            logger.error(f"获取认证链接失败: {e}")
+            if "Connection to 1.1.1.1 timed out" in str(e):
+                logger.error("获取认证链接失败，请确认当前处于校园网环境下")
+                return None
+            else:
+                logger.error(f"获取认证链接失败: {e}")
 
     def get_data(self, username=None, password=None):
         """

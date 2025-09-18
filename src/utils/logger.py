@@ -74,7 +74,7 @@ class QTextBrowserSink:
 def setup_logger(username=None, log_widget=None):
     """
     动态设置日志用户名，用于登录切换场景，同时获取日志文件路径并配置日志。
-    兼容开发环境和打包成 exe 的环境，若未找到项目根目录则报错。
+    兼容开发环境和打包成 exe 的环境，若开发环境未找到项目根目录则报错。
 
     Args:
         username (str, optional): 日志文件名使用的用户名，默认为 None。

@@ -8,8 +8,7 @@ import sys
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QPoint, QTime, QEvent
-from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QTableWidgetItem, QMenu
+from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QTableWidgetItem
 
 from src.core.AsyncTaskExecutor import AsyncTaskExecutor
 from src.core.network import networkmanager
@@ -34,10 +33,11 @@ class MainWindow(QMainWindow):
         self.ui.time_edit.setTime(QTime.currentTime())
         self.ui.lineEdit_username.setText(credentials.get('username', ''))
         self.ui.lineEdit_password.setText(credentials.get('password', ''))
-        self.ui.checkBox.setChecked(True)
+        self.ui.label_black_message.setText("")
 
         self.task_manager = TaskManager()
         self.task_executor = AsyncTaskExecutor()
+        # 连接信号槽
         self.task_executor.finished.connect(self.handle_general_finished)
         
         # 设置界面日志输出，连接到右侧的日志控件
@@ -54,19 +54,6 @@ class MainWindow(QMainWindow):
 
         # 为标题栏添加事件过滤器
         self.ui.frame_title.installEventFilter(self)
-
-    def setup_log_context_menu(self):
-        """
-        设置日志控件的右键菜单
-        """
-        self.ui.menuBar.hide()
-        
-        # 直接使用lambda表达式显示右键菜单，避免单独的show_log_context_menu方法
-        self.ui.textBrowser_log.customContextMenuRequested.connect(
-            lambda position: self.ui.menulogMenu.exec_(self.ui.textBrowser_log.mapToGlobal(position))
-        )
-        # 连接action_clear_log的triggered信号到清空日志的槽函数
-        self.ui.action_clear_log.triggered.connect(self.ui.textBrowser_log.clear)
     
     def _init_ui_connect_(self):
         """
@@ -129,10 +116,25 @@ class MainWindow(QMainWindow):
         if event.button() == Qt.LeftButton:
             self.dragging = False
 
+    def setup_log_context_menu(self):
+        """
+        设置日志控件的右键菜单
+        """
+        self.ui.menuBar.hide()
+        
+        # 直接使用lambda表达式显示右键菜单，避免单独的show_log_context_menu方法
+        self.ui.textBrowser_log.customContextMenuRequested.connect(
+            lambda position: self.ui.menulogMenu.exec_(self.ui.textBrowser_log.mapToGlobal(position))
+        )
+        # 连接action_clear_log的triggered信号到清空日志的槽函数
+        self.ui.action_clear_log.triggered.connect(self.ui.textBrowser_log.clear)
+
     def save_credentials(self):
         """
         保存用户凭证到配置文件。
         """
+        username = self.ui.lineEdit_username.text()
+        setup_logger(username=username)
         if self.ui.checkBox.isChecked():
             credentials.set('username', self.ui.lineEdit_username.text().strip())
             credentials.set('password', self.ui.lineEdit_password.text().strip())
@@ -144,47 +146,151 @@ class MainWindow(QMainWindow):
         """
         处理异步任务完成后的回调。
         """
-        result = message
-        try:
-            # 尝试解析 message 获取 op_type 和 result，如果失败则保持原样
-            if message.startswith('(') and ')' in message and ',' in message:
-                # 简单的手动解析，避免使用eval
-                parts = message[1:-1].split(',', 1)
-                if len(parts) == 2:
-                    parsed_op_type = parts[0].strip().strip('"\'')
-                    result_part = parts[1].strip()
-                    # 尝试转换result_part为布尔值
-                    if result_part.lower() == 'true':
-                        result = True
-                    elif result_part.lower() == 'false':
-                        result = False
-                    else:
-                        result = result_part
-                    op_type = parsed_op_type
-        except Exception:
-            # 如果解析失败，不报错，继续使用原始值
-            pass
-
         try:
             if op_type == "login":
-                self.show_login_result(success, result)
+                # 登录结果处理
+                if success and message == True:
+                    self.ui.label_green_message.setText("登录成功！")
+                    self.ui.stackedWidget_message.setCurrentIndex(1)
+                else:
+                    self.ui.label_red_message.setText("登录失败！")
+                    self.ui.stackedWidget_message.setCurrentIndex(2)
+                self.ui.pushButton_login.setEnabled(True)
+            
             elif op_type == "dislogin":
-                self.show_dislogin_result(success, result)
+                # 下线结果处理
+                if success and message == True:
+                    self.ui.label_green_message.setText("下线成功！")
+                    self.ui.stackedWidget_message.setCurrentIndex(1)
+                else:
+                    self.ui.label_red_message.setText("下线失败")
+                    self.ui.stackedWidget_message.setCurrentIndex(2)
+                self.ui.pushButton_dislogin.setEnabled(True)
+            
             elif op_type == "exe_generation":
-                self.handle_exe_generation_finished(success, result)
+                # EXE生成结果处理
+                self.ui.pushButton_generate.setEnabled(True)
+                if success:
+                    self.ui.stackedWidget_message.setCurrentIndex(1)
+                    self.ui.label_green_message.setText("EXE文件生成成功...")
+
+                    # 构建EXE文件的完整路径
+                    username = self.ui.lineEdit_username.text().strip()
+                    exe_name = f"login{username}.exe"
+                    exe_path = self.task_manager.task_folder / exe_name
+
+                    # 弹出提示框
+                    msg_box = QMessageBox(self)
+                    msg_box.setWindowTitle("生成成功")
+                    msg_box.setText(f"EXE 文件已成功生成，保存路径为：\n{exe_path}")
+                    logger.info(f"EXE 文件已成功生成，保存路径为：{exe_path}")
+                    open_folder_btn = msg_box.addButton(
+                        "打开文件目录", QMessageBox.ActionRole)
+                    close_btn = msg_box.addButton("关闭", QMessageBox.RejectRole)
+                    msg_box.exec_()
+
+                    if msg_box.clickedButton() == open_folder_btn:
+                        # 打开任务文件夹
+                        if sys.platform.startswith('win'):
+                            os.startfile(self.task_manager.task_folder)
+                        elif sys.platform.startswith('darwin'):
+                            subprocess.run(['open', self.task_manager.task_folder])
+                        elif sys.platform.startswith('linux'):
+                            subprocess.run(['xdg-open', self.task_manager.task_folder])
+
+                    # 自动清理build目录和.spec文件
+                    build_dir = self.task_manager.task_folder / "build"
+                    spec_file = self.task_manager.task_folder / f"{exe_name.replace('.exe', '')}.spec"
+                    if build_dir.exists():
+                        shutil.rmtree(build_dir)
+                    if spec_file.exists():
+                        spec_file.unlink()
+
+                    # 不删除auto_login.py脚本
+                    auto_login_script_path = self.task_manager.task_folder / "auto_login.py"
+                    if auto_login_script_path.exists():
+                        auto_login_script_path.unlink()
+
+                else:
+                    logger.error(f"生成EXE文件失败: {message}")
+                    QMessageBox.critical(self, "错误", f"生成EXE文件失败: {message}")
+            
             elif op_type == "create_task":
-                self.handle_create_task_result(success, result)
+                # 创建任务结果处理
+                if isinstance(message, tuple):
+                    create_success, file_name = message
+                else:
+                    create_success, file_name = success, message
+
+                if create_success:
+                    self.query_tasks_async()
+                    QMessageBox.information(
+                        self, "成功", f"计划任务 '{file_name}' 创建成功！")
+                    logger.info(f"计划任务'{file_name}'创建成功！")
+                else:
+                    QMessageBox.critical(self, "错误", f"创建任务失败:\n{message}")
+                    logger.error(f"创建任务失败: {message}")
+            
             elif op_type == "query_tasks":
-                # 解包 query_tasks 返回的结果
-                query_success, task_list = result
-                self.handle_query_tasks_result(query_success, task_list)
+                # 查询任务结果处理
+                query_success, task_list = message
+                if query_success:
+                    if not isinstance(task_list, list):
+                        logger.error(f"查询任务返回结果不是列表类型，实际类型: {type(task_list).__name__}，结果内容: {task_list}")
+                        QMessageBox.critical(
+                            self, "错误", "查询任务返回结果格式错误")
+                        return
+                    # 更新任务列表
+                    try:
+                        self.ui.task_table.setRowCount(0)
+
+                        column_keys = {
+                            0: "name",
+                            1: "filepath",
+                            2: "status",
+                            3: "next_run"
+                        }
+
+                        for row, task in enumerate(task_list):
+                            self.ui.task_table.insertRow(row)
+                            for col, key in column_keys.items():
+                                item = QTableWidgetItem(task[key])
+                                item.setToolTip(task[key])
+                                self.ui.task_table.setItem(row, col, item)
+
+                        self.ui.task_table.resizeColumnsToContents()
+                    except Exception as e:
+                        QMessageBox.critical(
+                            self, "错误", f"更新任务列表失败:\n{str(e)}")
+                        logger.error(f"更新任务列表失败: {str(e)}")
+                    if not task_list:
+                        QMessageBox.information(
+                            self, "提示", "没有查询到匹配的任务")
+                else:
+                    QMessageBox.critical(self, "错误", f"查询任务失败:\n{task_list}")
+                    logger.error(f"查询任务失败: {task_list}")
+            
             elif op_type == "delete_task":
-                self.handle_delete_task_result(success, result)
+                # 删除任务结果处理
+                if isinstance(message, tuple):
+                    delete_message = message[1] if len(message) > 1 else str(message)
+                else:
+                    delete_message = str(message)
+
+                if success:
+                    self.query_tasks_async()
+                    QMessageBox.information(self, "成功", delete_message)
+                else:
+                    QMessageBox.critical(self, "错误", f"删除任务失败:\n{delete_message}")
+                    logger.error(f"删除任务失败: {delete_message}")
         except Exception as e:
             logger.error(f"处理异步任务 {op_type} 结果失败: {e}")
             QMessageBox.critical(self, "错误", f"处理异步任务 {op_type} 结果失败: {e}")
             if op_type == "login":
-                self.show_login_result(False, False)  # 强制标记登录失败
+                # 强制标记登录失败
+                self.ui.label_red_message.setText("登录失败！")
+                self.ui.stackedWidget_message.setCurrentIndex(2)
+                self.ui.pushButton_login.setEnabled(True)
             self._restore_button_state(op_type)
 
     def _restore_button_state(self, op_type):
@@ -197,30 +303,6 @@ class MainWindow(QMainWindow):
             self.ui.pushButton_dislogin.setEnabled(True)
         # 可以根据需要添加其他操作类型的按钮恢复逻辑
 
-    def show_login_result(self, success, result):
-        """
-        显示登录结果信息。
-        """
-        if success:
-            self.ui.label_green_message.setText("登录成功！")
-            self.ui.stackedWidget_message.setCurrentIndex(1)
-        else:
-            self.ui.label_red_message.setText("登录失败！")
-            self.ui.stackedWidget_message.setCurrentIndex(2)
-        self.ui.pushButton_login.setEnabled(True)
-
-    def show_dislogin_result(self, success, result):
-        """
-        显示下线结果信息。
-        """
-        if success:
-            self.ui.label_green_message.setText("下线成功！")
-            self.ui.stackedWidget_message.setCurrentIndex(1)
-        else:
-            self.ui.label_red_message.setText("下线失败")
-            self.ui.stackedWidget_message.setCurrentIndex(2)
-        self.ui.pushButton_dislogin.setEnabled(True)
-
     def login(self):
         """
         执行登录操作。
@@ -231,7 +313,6 @@ class MainWindow(QMainWindow):
 
         username = self.ui.lineEdit_username.text().strip()
         password = self.ui.lineEdit_password.text().strip()
-        setup_logger(username=username)
         # 传递操作类型作为参数
         self.task_executor.execute_task(
             lambda: ("login", networkmanager.login(username, password)),
@@ -283,76 +364,13 @@ class MainWindow(QMainWindow):
             lambda: ("create_task", self.task_manager.create_task(file_path))
         )
 
-    def handle_create_task_result(self, success, result):
-        """
-        处理创建任务的结果。
-        """
-        if isinstance(result, tuple):
-            create_success, file_name = result
-        else:
-            create_success, file_name = success, result
-
-        if create_success:
-            self.query_tasks_async()
-            QMessageBox.information(
-                self, "成功", f"计划任务 '{file_name}' 创建成功！")
-            logger.info(f"计划任务'{file_name}'创建成功！")
-        else:
-            QMessageBox.critical(self, "错误", f"创建任务失败:\n{result}")
-            logger.error(f"创建任务失败: {result}")
-
     def query_tasks_async(self):
         """
         异步查询计划任务。
         """
         self.task_executor.execute_task(
-            lambda: ("query_tasks", self.task_manager.query_tasks())
+            lambda: (self.task_manager.query_tasks(),"query_tasks")
         )
-
-    def handle_query_tasks_result(self, success, result):
-        """
-        处理查询任务的结果。
-        """
-        if success:
-            if not isinstance(result, list):
-                logger.error(f"查询任务返回结果不是列表类型，实际类型: {type(result).__name__}，结果内容: {result}")
-                QMessageBox.critical(
-                    self, "错误", "查询任务返回结果格式错误")
-                return
-            self.update_task_list(result)
-            if not result:
-                QMessageBox.information(
-                    self, "提示", "没有查询到匹配的任务")
-        else:
-            QMessageBox.critical(self, "错误", f"查询任务失败:\n{result}")
-            logger.error(f"查询任务失败: {result}")
-
-    def update_task_list(self, tasks: list):
-        """
-        更新任务列表显示。
-        """
-        try:
-            self.ui.task_table.setRowCount(0)
-
-            column_keys = {
-                0: "name",
-                1: "filepath",
-                2: "status",
-                3: "next_run"
-            }
-
-            for row, task in enumerate(tasks):
-                self.ui.task_table.insertRow(row)
-                for col, key in column_keys.items():
-                    item = QTableWidgetItem(task[key])
-                    item.setToolTip(task[key])
-                    self.ui.task_table.setItem(row, col, item)
-
-            self.ui.task_table.resizeColumnsToContents()
-        except Exception as e:
-            QMessageBox.critical(
-                self, "错误", f"更新任务列表失败:\n{str(e)}")
-            logger.error(f"更新任务列表失败: {str(e)}")
 
     def delete_task_async(self):
         """
@@ -375,22 +393,6 @@ class MainWindow(QMainWindow):
                 lambda: ("delete_task", self.task_manager.delete_task(full_task_name))
             )
 
-    def handle_delete_task_result(self, success, result):
-        """
-        处理删除任务的结果。
-        """
-        if isinstance(result, tuple):
-            message = result[1] if len(result) > 1 else str(result)
-        else:
-            message = str(result)
-
-        if success:
-            self.query_tasks_async()
-            QMessageBox.information(self, "成功", message)
-        else:
-            QMessageBox.critical(self, "错误", f"删除任务失败:\n{message}")
-            logger.error(f"删除任务失败: {message}")
-
     def create_exe(self):
         """
         生成自动登录的 EXE 文件。
@@ -401,17 +403,15 @@ class MainWindow(QMainWindow):
         # 输入验证
         if not username or not password:
             QMessageBox.critical(self, "错误", "请输入账号和密码")
-            return
+            return False
 
         try:
             # 确保任务文件夹存在
             self.task_manager.task_folder.mkdir(parents=True, exist_ok=True)
-            script_dir = Path(__file__).parent.absolute()
-            project_root = script_dir.parent.parent
 
             # 生成自动登录脚本，将脚本放在 task_folder 目录下
             auto_login_script = self._generate_auto_login_script(username, password)
-            auto_login_script_path = self.task_manager.task_folder / "auto_login.py"
+            auto_login_script_path = self.task_manager.task_folder.joinpath("auto_login.py")
             with open(auto_login_script_path, "w", encoding="utf-8") as f:
                 f.write(auto_login_script)
 
@@ -425,14 +425,14 @@ class MainWindow(QMainWindow):
             self.ui.pushButton_generate.setEnabled(False)
 
             # 使用 cx_Freeze 生成 EXE 文件
-            generate_exe_with_cx_freeze(str(auto_login_script_path), exe_name, str(self.task_manager.task_folder))
+            # generate_exe_with_cx_freeze(str(auto_login_script_path), exe_name, str(self.task_manager.task_folder))
 
             self.ui.pushButton_generate.setEnabled(True)
             self.ui.stackedWidget_message.setCurrentIndex(1)
-            self.ui.label_green_message.setText("EXE文件生成成功...")
+            self.ui.label_green_message.setText("EXE文件生成成功")
 
             # 构建 EXE 文件的完整路径
-            exe_path = self.task_manager.task_folder / f"{exe_name}.exe"
+            exe_path = self.task_manager.task_folder.joinpath(f"{exe_name}.exe")
 
             # 弹出提示框
             msg_box = QMessageBox(self)
@@ -464,62 +464,160 @@ class MainWindow(QMainWindow):
                 auto_login_script_path.unlink()
 
         except Exception as e:
-            logger.error(
-                f"生成EXE文件失败: {str(e)}, 错误详情: {getattr(e, 'stderr', '')}")
+            logger.critical(f"生成EXE文件失败: {str(e)}, 错误详情: {getattr(e, 'stderr', '')}")
             QMessageBox.critical(self, "错误", f"生成EXE文件失败: {str(e)}")
+            self.ui.pushButton_generate.setEnabled(True)
+            self.ui.stackedWidget_message.setCurrentIndex(2)
+            self.ui.label_red_message.setText("EXE文件生成失败")
 
     @staticmethod
     def _generate_auto_login_script(username, password):
         """
         生成自动登录脚本内容。
         """
-        return f"""
+        # 使用单引号构建整个脚本内容，避免三引号嵌套导致的解析问题
+        script_content = '''
+import sys
 import time
-import sys
+import socket
 from pathlib import Path
+from typing import Optional
 
-# 确保正确获取项目根目录
-if getattr(sys, 'frozen', False):
-    # 打包后的环境，从临时解压目录获取路径
-    base_path = Path(sys._MEIPASS)
-else:
-    # 开发环境，从代码文件位置获取路径
-    base_path = Path(__file__).parent.parent.parent
+# 设置编码
+import io
+import os
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
-# 动态构建模块路径
-import sys
-sys.path.insert(0, str(base_path / 'app'))
-sys.path.insert(0, str(base_path / 'app' / 'core'))
-sys.path.insert(0, str(base_path / 'app' / 'utils'))
-
-from app.core.network import networkmanager
-from app.utils.logger import logger, setup_logger
-
-USERNAME = "{username}"
-PASSWORD = "{password}"
-
-def auto_login():
-    setup_logger(username=USERNAME)
-    try:
-        result = networkmanager.login(USERNAME, PASSWORD)
-        if result:
-            print("登录成功！")
-            logger.info("自动登录成功！")
+class LoginHelper:
+    """自动登录助手类，封装登录逻辑和工具方法"""
+    
+    def __init__(self, username: str, password: str):
+        self.username = username
+        self.password = password
+        self.setup_project_paths()
+        self._import_required_modules()
+        
+    def setup_project_paths(self) -> None:
+        """设置项目路径，处理开发环境和打包环境的差异"""
+        # 确定基础路径，处理不同运行环境
+        if getattr(sys, 'frozen', False):
+            # 打包后的环境，从临时解压目录获取路径
+            self.base_path = Path(sys._MEIPASS)
         else:
-            print("登录失败！")
-            logger.error("自动登录失败！")
-    except Exception as e:
-        print(f"登录出错: {{str(e)}}")
-        logger.error(f"自动登录出错: {{str(e)}}")
+            # 开发环境，从代码文件位置获取路径
+            self.base_path = Path(__file__).parent.parent.parent
+            
+        # 动态构建模块路径
+        for path_segment in ['app', 'app/core', 'app/utils']:
+            sys.path.insert(0, str(self.base_path / path_segment))
+    
+    def _import_required_modules(self) -> None:
+        """动态导入必要的模块，确保在运行时可用"""
+        global networkmanager, logger, setup_logger
+        try:
+            from app.core.network import networkmanager
+            from app.utils.logger import logger, setup_logger
+            setup_logger(username=self.username)
+        except ImportError as e:
+            print(f"导入模块失败: {{str(e)}}")
+            # 尝试备用导入路径
+            try:
+                # 尝试直接导入，适用于独立运行场景
+                import networkmanager
+                import logger
+                setup_logger = logger.setup_logger
+                setup_logger(username=self.username)
+            except ImportError:
+                print("无法导入必要的模块，请确保程序目录结构正确。")
+                sys.exit(1)
+    
+    def check_network_connectivity(self, host: str = "www.baidu.com", port: int = 80, timeout: int = 3) -> bool:
+        """检查网络连接是否正常"""
+        try:
+            with socket.create_connection((host, port), timeout=timeout):
+                return True
+        except OSError:
+            return False
+    
+    def login(self, max_retries: int = 3, retry_delay: int = 2) -> bool:
+        """执行登录操作，支持重试机制"""
+        retries = 0
+        
+        # 首先检查网络连接
+        if not self.check_network_connectivity():
+            print("网络连接不可用，请检查网络设置。")
+            logger.error("网络连接不可用，请检查网络设置。")
+            return False
+            
+        while retries < max_retries:
+            try:
+                print(f"{{'重试' if retries > 0 else '尝试'}}登录账号: {{self.username}}")
+                result = networkmanager.login(self.username, self.password)
+                
+                if result:
+                    print("登录成功！")
+                    logger.info("自动登录成功！")
+                    return True
+                else:
+                    retries += 1
+                    error_msg = f"登录失败{{', 将重试' if retries < max_retries else ''}}！"
+                    print(error_msg)
+                    logger.error(error_msg)
+                    
+                    if retries < max_retries:
+                        print(f"等待 {{retry_delay}} 秒后重试...")
+                        time.sleep(retry_delay)
+            except Exception as e:
+                retries += 1
+                error_msg = f"登录过程中出错: {{str(e)}}{{', 将重试' if retries < max_retries else ''}}"
+                print(error_msg)
+                logger.error(error_msg)
+                
+                if retries < max_retries:
+                    print(f"等待 {{retry_delay}} 秒后重试...")
+                    time.sleep(retry_delay)
+        
+        return False
+
+    def run(self) -> None:
+        """运行自动登录流程"""
+        try:
+            print("=== 校园网自动登录工具 ===")
+            print(f"当前时间: {{time.strftime('%Y-%m-%d %H:%M:%S')}}")
+            
+            # 执行登录
+            success = self.login()
+            
+            # 登录结果后显示状态信息
+            if success:
+                print("自动登录流程已完成。")
+                logger.info("自动登录流程已完成。")
+            else:
+                print("自动登录流程失败，请检查账号密码或网络状态。")
+                logger.error("自动登录流程失败，请检查账号密码或网络状态。")
+                
+        except KeyboardInterrupt:
+            print("\n程序已被用户中断。")
+            logger.info("程序已被用户中断。")
+        except Exception as e:
+            print(f"程序运行时发生未预期错误: {{str(e)}}")
+            logger.error(f"程序运行时发生未预期错误: {{str(e)}}")
 
 if __name__ == '__main__':
+    # 创建并运行登录助手
+    login_helper = LoginHelper(username='{0}', password='{1}')
+    login_helper.run()
+    
+    # 保持终端打开，方便查看错误信息
     try:
-        auto_login()
-    except Exception as e:
-        print(f"程序运行出错: {{str(e)}}")
-        logger.error(f"程序运行出错: {{str(e)}}")
-    input("按回车键退出...")  # 保持终端打开，方便查看错误信息
-            """
+        input("\n按回车键退出...")
+    except (KeyboardInterrupt, EOFError):
+        pass  # 允许用户通过Ctrl+C或Ctrl+D退出
+'''
+        
+        # 使用format方法进行变量替换，确保正确处理字符串
+        return script_content.format(username, password)
 
     def _build_pyinstaller_params(self, script_path, exe_name):
         """
@@ -587,56 +685,6 @@ if __name__ == '__main__':
             logger.error(
                 f"生成EXE文件时发生未知错误: {str(e)}, 命令: {' '.join(params)}")
             return False
-
-    def handle_exe_generation_finished(self, success, message):
-        """
-        处理 EXE 文件生成完成的结果。
-        """
-        self.ui.pushButton_generate.setEnabled(True)
-        if success:
-            self.ui.stackedWidget_message.setCurrentIndex(1)
-            self.ui.label_green_message.setText("EXE文件生成成功...")
-
-            # 构建 EXE 文件的完整路径
-            username = self.ui.lineEdit_username.text().strip()
-            exe_name = f"login{username}.exe"
-            exe_path = self.task_manager.task_folder / exe_name
-
-            # 弹出提示框
-            msg_box = QMessageBox(self)
-            msg_box.setWindowTitle("生成成功")
-            msg_box.setText(f"EXE 文件已成功生成，保存路径为：\n{exe_path}")
-            logger.info(f"EXE 文件已成功生成，保存路径为：{exe_path}")
-            open_folder_btn = msg_box.addButton(
-                "打开文件目录", QMessageBox.ActionRole)
-            close_btn = msg_box.addButton("关闭", QMessageBox.RejectRole)
-            msg_box.exec_()
-
-            if msg_box.clickedButton() == open_folder_btn:
-                # 打开任务文件夹
-                if sys.platform.startswith('win'):
-                    os.startfile(self.task_manager.task_folder)
-                elif sys.platform.startswith('darwin'):
-                    subprocess.run(['open', self.task_manager.task_folder])
-                elif sys.platform.startswith('linux'):
-                    subprocess.run(['xdg-open', self.task_manager.task_folder])
-
-            # 自动清理 build 目录和 .spec 文件
-            build_dir = self.task_manager.task_folder / "build"
-            spec_file = self.task_manager.task_folder / f"{exe_name.replace('.exe', '')}.spec"
-            if build_dir.exists():
-                shutil.rmtree(build_dir)
-            if spec_file.exists():
-                spec_file.unlink()
-
-            # 不删除 auto_login.py 脚本
-            auto_login_script_path = self.task_manager.task_folder / "auto_login.py"
-            if auto_login_script_path.exists():
-                auto_login_script_path.unlink()
-
-        else:
-            logger.error(f"生成EXE文件失败: {message}")
-            QMessageBox.critical(self, "错误", f"生成EXE文件失败: {message}")
 
 
 def run():

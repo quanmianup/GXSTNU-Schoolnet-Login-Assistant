@@ -1,6 +1,5 @@
 import time
 from urllib.parse import urlparse, parse_qs
-
 import requests
 
 from src.utils.logger import logger
@@ -58,7 +57,6 @@ class NetworkManager:
 
     """
     _instance = None  # 类级别私有变量，用于保存类的唯一实例
-    _initialized = False
 
     def __new__(cls, *args, **kwargs):
         """
@@ -84,21 +82,6 @@ class NetworkManager:
         self.AUTH_DOMAIN = credentials.get("AUTH_DOMAIN")
         self.RETRY_INTERVAL = credentials.get("RETRY_INTERVAL")
 
-    def lazy_init(self):
-        """
-        懒加载初始化方法，仅在第一次调用时从配置文件加载参数，避免不必要的初始化开销。
-        """
-        if not self._initialized:
-            # 从配置加载参数
-            self.TEST_URL = credentials.get("TEST_URL")
-            self.BASE_URL = credentials.get("BASE_URL")
-            self.USERNAME = credentials.get("USERNAME")
-            self.PASSWORD = credentials.get("PASSWORD")
-            self.MAX_RETRY = credentials.get("MAX_RETRY")
-            self.AUTH_DOMAIN = credentials.get("AUTH_DOMAIN")
-            self.RETRY_INTERVAL = credentials.get("RETRY_INTERVAL")
-            self._initialized = True
-
     def check_network(self):
         """
         检查网络连接状态，判断网络是否连接成功且不在认证页面。
@@ -116,8 +99,14 @@ class NetworkManager:
                 logger.warning("网络未连接或处于认证页面")
                 return False
             return True
-        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
-            logger.error(f'网络检测异常: {e}')
+        except requests.exceptions.ConnectionError:
+            logger.error('网络连接异常: 无法连接到测试网站')
+            return False
+        except requests.exceptions.Timeout:
+            logger.error(f'网络连接超时: 超过{self.RETRY_INTERVAL}秒未收到响应')
+            return False
+        except Exception as e:
+            logger.error(f'网络检测异常: {str(e)}')
             return False
 
     def get_auth_urls(self):
@@ -125,7 +114,7 @@ class NetworkManager:
         获取认证相关的 URL，包括登录、登出和检查状态的 URL，其中包含本机的 IP 和 MAC 地址。
 
         Returns:
-            dict: 包含 'login'、'disconnect'、'check' 三个键的 URL 字典，若获取失败则返回 None。
+            dict or None: 包含 'login'、'disconnect'、'check' 等键的 URL 字典，若获取失败则返回 None。
         """
         try:
             # 发送 GET 请求获取认证相关信息
@@ -134,20 +123,30 @@ class NetworkManager:
             parsed_url = urlparse(response.url)
             # 解析 URL 中的查询参数
             query_params = parse_qs(parsed_url.query)
-            ip = query_params.get('wlanuserip', '')
-            mac = query_params.get('mac', '')
+            # 安全地获取参数值
+            ip = query_params.get('wlanuserip', [''])[0] if isinstance(query_params.get('wlanuserip'), list) else ''
+            mac = query_params.get('mac', [''])[0] if isinstance(query_params.get('mac'), list) else ''
+            
+            # 检查必要参数是否获取成功
+            if not ip or not mac:
+                logger.error("未能从认证页面获取到IP、mac参数")
+                return None
+            
             return {
                 'login': f'https://{self.AUTH_DOMAIN}/webauth.do?wlanacip=172.16.1.82&wlanuserip={ip}&mac={mac}',
                 'disconnect': f'https://{self.AUTH_DOMAIN}/webdisconn.do?wlanacip=172.16.1.82&wlanuserip={ip}&mac={mac}',
                 'check': f'https://{self.AUTH_DOMAIN}/getAuthResult.do',
-                'test_url': self.TEST_URL,
+                # 'test_url': self.TEST_URL,
             }
+        except requests.exceptions.Timeout:
+            logger.error("获取认证链接超时，请确认网络已连接切处于校园网环境下")
+            return None
+        except requests.exceptions.ConnectionError:
+            logger.error("获取认证链接连接失败，请确认当前处于校园网环境下")
+            return None
         except Exception as e:
-            if "Connection to 1.1.1.1 timed out" in str(e):
-                logger.error("获取认证链接失败，请确认当前处于校园网环境下")
-                return None
-            else:
-                logger.error(f"获取认证链接失败: {e}")
+            logger.error(f"获取认证链接异常: {str(e)}")
+            return None
 
     def get_data(self, username=None, password=None):
         """
@@ -158,7 +157,7 @@ class NetworkManager:
             password (str, optional): 登录密码，默认为配置文件中的密码。
 
         Returns:
-            dict: 包含 'check'、'login'、'disconnect' 三个键的数据体字典。
+            dict: 包含 'check'、'login'、'disconnect'、'headers'的数据体字典。
         """
         username = self.USERNAME if username is None else username
         password = self.PASSWORD if password is None else password
@@ -193,7 +192,7 @@ class NetworkManager:
                 'userId': username,
                 'other1': 'disconn'
             },
-            'test_headers': {
+            'headers': {
                 'User-Agent': 'Mozilla/5.0'
             }
         }
@@ -208,40 +207,68 @@ class NetworkManager:
             password (str, optional): 登录密码，默认为配置文件中的密码。
 
         Returns:
-            bool: 若登录成功返回 True，否则返回 False。
+            bool: 登录成功返回 True，登录失败返回 False。
         """
         username = self.USERNAME if username is None else username
         password = self.PASSWORD if password is None else password
+        
+        # 验证用户名和密码
+        if not username or not password:
+            logger.error("用户名或密码为空！")
+            return False
+            
+        # 获取认证URLs
+        auth_urls = self.get_auth_urls()
+        if auth_urls is None:
+            return False
+        
         # 获取登录 URL
-        login_url = self.get_auth_urls()['login']
+        login_url = auth_urls['login']
         # 获取登录请求数据体
         login_data = self.get_data(username, password)['login']
         # 获取检查状态 URL
-        check_url = self.get_auth_urls()['check']
+        check_url = auth_urls['check']
         # 获取检查状态请求数据体
         check_data = self.get_data(username, password)['check']
-        # 如果账号已在线，先执行下线
-        if 'errorMsg=' in requests.get(url=check_url, data=check_data, timeout=self.RETRY_INTERVAL).text:
-            logger.info(f"{username}账号已在线，执行下线操作")
-            self.logout(username)
+        
+        # 检查账号在线状态
+        try:
+            check_response = requests.get(url=check_url, data=check_data, timeout=self.RETRY_INTERVAL)
+            if 'errorMsg=' in check_response.text:
+                logger.info(f"{username}账号已在线，执行下线操作")
+                # 执行下线操作但不影响登录流程继续
+                if self.dislogin(username):
+                    logger.info(f"{username}账号已成功下线")
+                else:
+                    logger.warning(f"{username}账号下线失败，继续登录流程")
+        except Exception as e:
+            logger.warning(f"检查账号在线状态时发生异常: {str(e)}，继续登录流程")
+            
         logger.info(f'正在尝试登录校园网账号: {username}')
 
-        for attempt in range(self.MAX_RETRY):
-            # 发送登录请求
-            requests.post(url=login_url, data=login_data, timeout=self.RETRY_INTERVAL)
-            # 等待一段时间后检查登录状态
-            time.sleep(self.RETRY_INTERVAL)
-            response = requests.post(url=check_url, data=check_data, timeout=self.RETRY_INTERVAL)
-            if response.status_code == 200:
-                if '运营商网络拨号成功' in response.text and self.check_network():
-                    logger.info(f'登录成功: {username}')
-                    return True
-                if attempt + 1 == self.MAX_RETRY:
-                    logger.warning('请检查账号密码或先下线已登录账号')
-                    return False
-            logger.info(f'第 {attempt + 1} 次登录失败，状态码: {response.status_code}')
-        logger.warning(f"{username}登录失败")
-        return False
+        for attempt in range(1, self.MAX_RETRY + 1):
+            try:
+                # 发送登录请求
+                login_response = requests.post(url=login_url, data=login_data, timeout=self.RETRY_INTERVAL)
+                # 等待一段时间后检查登录状态
+                time.sleep(self.RETRY_INTERVAL)
+                check_response = requests.post(url=check_url, data=check_data, timeout=self.RETRY_INTERVAL)
+                
+                if check_response.status_code == 200:
+                    if '运营商网络拨号成功' in check_response.text and self.check_network():
+                        logger.info(f'登录成功: {username}')
+                        return True
+                else:
+                    logger.warning(f'第 {attempt} 次登录请求失败，状态码: {login_response.status_code}')
+            except requests.exceptions.Timeout:
+                logger.warning(f'第 {attempt} 次登录请求超时')
+            except requests.exceptions.ConnectionError:
+                logger.warning(f'第 {attempt} 次登录请求连接失败')
+            except Exception as e:
+                logger.warning(f'第 {attempt} 次登录过程中发生异常: {str(e)}')
+        else:
+            logger.warning('登录失败：请检查账号密码是否正确，或先手动下线已登录的账号')
+            return False
 
     def dislogin(self, username=None):
         """
@@ -251,21 +278,45 @@ class NetworkManager:
             username (str, optional): 登出的用户名，默认为配置文件中的用户名。
 
         Returns:
-            bool: 若登出成功返回 True，否则返回 False。
+            bool: 登出成功返回 True，登出失败返回 False。
         """
         username = self.USERNAME if username is None else username
+        
+        # 验证用户名
+        if not username:
+            logger.error("用户名为空，登出失败")
+            return False
+            
+        # 获取认证URLs
+        auth_urls = self.get_auth_urls()
+        if auth_urls is None:
+            return False
+
         # 获取登出请求数据体
         logout_data = self.get_data(username)['disconnect']
         # 获取登出 URL
-        disconnect_url = self.get_auth_urls()['disconnect']
-        for i in range(self.MAX_RETRY):
-            # 发送登出请求
-            response = requests.post(url=disconnect_url, data=logout_data, timeout=self.RETRY_INTERVAL)
-            if response.status_code == 200 and not self.check_network():
-                logger.info("登出成功")
-                return True
-            else:
-                logger.warning(f"第 {i + 1} 次登出失败，状态码: {response.status_code}")
+        disconnect_url = auth_urls['disconnect']
+        
+        logger.info(f'正在尝试登出校园网账号: {username}')
+        
+        for attempt in range(1, self.MAX_RETRY + 1):
+            try:
+                # 发送登出请求
+                dislogin_response = requests.post(url=disconnect_url, data=logout_data, timeout=self.RETRY_INTERVAL)
+                # 检查登出是否成功
+                if dislogin_response.status_code == 200 and not self.check_network():
+                    logger.info(f"{username}登出成功")
+                    return True
+                else:
+                    logger.warning(f"第 {attempt} 次登出请求失败，状态码: {dislogin_response.status_code}")
+            except requests.exceptions.Timeout:
+                logger.warning(f'第 {attempt} 次登出请求超时')
+            except requests.exceptions.ConnectionError:
+                logger.warning(f'第 {attempt} 次登出请求连接失败')
+            except Exception as e:
+                logger.warning(f'第 {attempt} 次登出过程中发生异常: {str(e)}')
+        
+        logger.error(f"{username}登出失败：请检查账号密码是否正确，或先手动下线已登录的账号")
         return False
 
 

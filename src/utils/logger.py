@@ -8,7 +8,7 @@ from PySide6.QtCore import QMetaObject, Qt, Q_ARG
 from PySide6.QtGui import QTextCursor
 from loguru import logger
 from config.credentials import credentials
-from src.utils.task_manager import TaskManager
+from src.core.TaskScheduler import TaskScheduler
 
 # 日志配置
 LOG_LEVEL = "DEBUG"
@@ -96,7 +96,7 @@ def setup_logger(username=None, log_widget=None):
     # 确定日志目录
     if getattr(sys, 'frozen', False):
         # 打包成 exe 的环境
-        log_dir = TaskManager().task_folder / "logs"
+        log_dir = TaskScheduler().task_folder / "logs"
     else:
         # 开发环境，获取项目根目录
         current_path = os.path.abspath(__file__)

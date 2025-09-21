@@ -64,7 +64,7 @@ class AsyncTaskExecutor(QObject):
     # op_type: 操作类型标识
     """
     # 任务完成信号：参数(success, message, operation_type)
-    finished: Signal = Signal(bool, str, str)  # 类型注解明确化
+    finished = Signal(bool, object, str)  # 正确实例化信号
 
     def __init__(self):
         super().__init__()
@@ -75,14 +75,13 @@ class AsyncTaskExecutor(QObject):
         # 记录任务ID，用于区分不同任务
         self.task_counter = 0
 
-    def execute_task(self, task: Callable, op_type: str = "unknown", *args) -> str:
+    def execute_task(self, func: Callable, op_type: str = "unknown") -> str:
         """
         执行异步任务
         
         Args:
-            task: 要执行的任务函数
+            func: 要执行的任务函数或已绑定参数的函数
             op_type: 操作类型标识（如"login", "dislogin"等）
-            *args: 传递给任务函数的参数
         
         Returns:
             str: 任务ID，可用于后续取消任务
@@ -93,12 +92,11 @@ class AsyncTaskExecutor(QObject):
         
         try:
             # 提交任务到线程池
-            future = self.thread_pool.submit(self._run_task, task, op_type, *args)
+            future = self.thread_pool.submit(self._run_task, func, op_type)
             # 存储任务引用以便追踪和取消
             self.active_tasks[task_id] = future
             # 添加回调处理结果
             future.add_done_callback(lambda f, tid=task_id: self._handle_future_result(f, tid))
-            # logger.info(f"[任务 {task_id}] 已提交，操作类型: {op_type}")
             return task_id
         except Exception as e:
             logger.error(f"[任务 {task_id}] 提交失败: {str(e)}")
@@ -131,14 +129,13 @@ class AsyncTaskExecutor(QObject):
         logger.info(f"已尝试取消所有任务，剩余活跃任务数: {len(self.active_tasks)}")
 
     @staticmethod
-    def _run_task(task: Callable, op_type: str, *args) -> tuple:
+    def _run_task(func: Callable, op_type: str) -> tuple:
         """
         在线程池中运行任务的内部方法
         
         Args:
-            task: 要执行的任务函数
+            func: 要执行的任务函数
             op_type: 操作类型标识
-            *args: 传递给任务函数的参数
         
         Returns:
             tuple: (success: bool, message: str, op_type: str)
@@ -147,16 +144,15 @@ class AsyncTaskExecutor(QObject):
             # op_type: 操作类型标识
         """
         # 获取任务名称，处理lambda函数和其他没有__name__属性的情况
-        task_name = getattr(task, "__name__", str(task))
+        task_name = getattr(func, "__name__", str(func))
         # 转义可能导致loguru颜色解析错误的字符
         task_name = task_name.replace('<', '\<').replace('>', '\>')
         # logger.info(f"[任务执行] 开始执行: {task_name}, 操作类型: {op_type}")
         
         try:
-            # 执行实际任务
-            result = task(*args)
-            # logger.info(f"[任务执行] 成功: {task_name}, 结果: {result}")
-            return True, str(result), op_type
+
+            # 包装成(success, message, op_type)格式
+            return True, func(), op_type
         except ConnectionError as e:
             logger.error(f"[任务执行] 连接错误: {task_name}, 错误: {str(e)}")
             return False, f"网络连接错误: {str(e)}", op_type

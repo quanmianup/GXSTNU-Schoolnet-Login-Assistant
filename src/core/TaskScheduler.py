@@ -5,11 +5,11 @@ import os
 import subprocess
 from pathlib import Path
 from src.utils.logger import logger
+from PySide6.QtCore import QTime
 
-
-class TaskManager:
+class TaskScheduler:
     """
-    任务管理类，封装计划任务的创建、查询和删除操作。
+    任务计划管理类，封装计划任务的创建、查询和删除操作。
     """
     def __init__(self):
         self.task_prefix = "FileScheduler_"
@@ -28,7 +28,7 @@ class TaskManager:
         file_name = os.path.basename(file_path)
         task_name = self.get_full_task_name(file_name)
         try:
-            time_str = self._get_current_time_str()
+            time_str = QTime.currentTime().toString("HH:mm:ss")
             cmd = [
                 "schtasks", "/Create", "/TN", task_name,
                 "/TR", file_path,
@@ -43,17 +43,9 @@ class TaskManager:
             err_msg = e.stderr if isinstance(e, subprocess.CalledProcessError) else str(e)
             return False, err_msg
 
-    @staticmethod
-    def _get_current_time_str():
-        """
-        获取当前时间的字符串表示。
-        """
-        from PyQt5.QtCore import QTime
-        return QTime.currentTime().toString("HH:mm:ss")
-
     def query_tasks(self):
         """
-        查询计划任务。
+        查询任务计划。
         """
         try:
             list_cmd = ["schtasks", "/Query", "/FO", "LIST"]
@@ -64,7 +56,7 @@ class TaskManager:
                 map(lambda x: f'"{x}"' if " " in x else x, filter_cmd))
 
             task_names_list_result = subprocess.run(
-                full_cmd, capture_output=True, text=True, shell=True)
+                full_cmd, capture_output=True, text=True, shell=True, encoding='utf8')
 
             if not task_names_list_result.stdout.strip():
                 return True, []
@@ -84,7 +76,7 @@ class TaskManager:
         task_names = []
         for line in output.strip().split('\n'):
             if line.startswith(("任务名:", "TaskName:")):
-                task_name = line.split(":", 1)[1].strip().lstrip('\\')
+                task_name = line.split(":", maxsplit = 1)[1].strip().lstrip('\\')
                 task_names.append(task_name)
         return task_names
 
@@ -96,15 +88,17 @@ class TaskManager:
         for task_name in task_names:
             detail_cmd = ["schtasks", "/Query", "/TN", task_name, "/V", "/FO", "LIST"]
             detail_result = subprocess.run(
-                detail_cmd, capture_output=True, text=True, check=True)
-
+                detail_cmd, capture_output=True, text=True, shell=True, encoding='utf8')
+            stdout_content = detail_result.stdout
+            if detail_result.stdout is None:
+                return tasks
             next_run = status = filepath = "N/A"
-            for detail_line in detail_result.stdout.strip().split('\n'):
+            for detail_line in stdout_content.strip().split('\n'):
                 if detail_line.startswith(("Next Run Time:", "下次运行时间")):
                     next_run = detail_line.split(":", 1)[1].strip()
                 elif detail_line.startswith(("Status:", "模式")):
                     status = detail_line.split(":", 1)[1].strip()
-                elif detail_line.startswith(("Actions:", "要运行的任务")):
+                elif detail_line.startswith(("Actions:", "要运行的任务", "Task To Run:")):
                     filepath = detail_line.split(":", 1)[1].strip()
 
             original_name = task_name[len(self.task_prefix):]

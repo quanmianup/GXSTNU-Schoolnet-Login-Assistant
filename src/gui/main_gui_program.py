@@ -6,15 +6,16 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+import time
 
 from PySide6.QtCore import Qt, QPoint, QTime, QEvent
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QTableWidgetItem
 
 from src.core.AsyncTaskExecutor import AsyncTaskExecutor
-from src.core.network import networkmanager
+from src.core.NetworkManager import networkmanager
 from src.gui.main_ui import *
 from src.utils.logger import logger, setup_logger
-from src.utils.task_manager import TaskManager
+from src.core.TaskScheduler import TaskScheduler
 from config.credentials import credentials
 
 
@@ -35,7 +36,7 @@ class MainWindow(QMainWindow):
         self.ui.lineEdit_password.setText(credentials.get('password', ''))
         self.ui.label_black_message.setText("")
 
-        self.task_manager = TaskManager()
+        self.task_manager = TaskScheduler()
         self.task_executor = AsyncTaskExecutor()
         # 连接信号槽
         self.task_executor.finished.connect(self.handle_general_finished)
@@ -60,9 +61,9 @@ class MainWindow(QMainWindow):
         初始化 UI 组件的事件连接。
         """
         self.ui.select_file_btn.clicked.connect(self.select_file)
-        self.ui.create_btn.clicked.connect(self.create_task_async)
-        self.ui.query_btn.clicked.connect(self.query_tasks_async)
-        self.ui.delete_btn.clicked.connect(self.delete_task_async)
+        self.ui.create_btn.clicked.connect(self.create_task)
+        self.ui.query_btn.clicked.connect(self.query_tasks)
+        self.ui.delete_btn.clicked.connect(self.delete_task)
         self.ui.pushButton_generate.clicked.connect(self.create_exe)
         self.ui.task_table.setColumnCount(4)
         self.ui.task_table.horizontalHeader().setVisible(True)
@@ -78,7 +79,7 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_tab_manege.clicked.connect(
             lambda: (
                 self.ui.stackedWidget_tab.setCurrentIndex(1),
-                self.query_tasks_async()
+                self.query_tasks()
             ))
 
     def eventFilter(self, obj, event):
@@ -223,7 +224,7 @@ class MainWindow(QMainWindow):
                     create_success, file_name = success, message
 
                 if create_success:
-                    self.query_tasks_async()
+                    self.query_tasks()
                     QMessageBox.information(
                         self, "成功", f"计划任务 '{file_name}' 创建成功！")
                     logger.info(f"计划任务'{file_name}'创建成功！")
@@ -233,7 +234,7 @@ class MainWindow(QMainWindow):
             
             elif op_type == "query_tasks":
                 # 查询任务结果处理
-                query_success, task_list = message
+                query_success ,task_list = message
                 if query_success:
                     if not isinstance(task_list, list):
                         logger.error(f"查询任务返回结果不是列表类型，实际类型: {type(task_list).__name__}，结果内容: {task_list}")
@@ -243,22 +244,21 @@ class MainWindow(QMainWindow):
                     # 更新任务列表
                     try:
                         self.ui.task_table.setRowCount(0)
-
                         column_keys = {
                             0: "name",
                             1: "filepath",
                             2: "status",
                             3: "next_run"
                         }
-
+                        
                         for row, task in enumerate(task_list):
                             self.ui.task_table.insertRow(row)
                             for col, key in column_keys.items():
                                 item = QTableWidgetItem(task[key])
                                 item.setToolTip(task[key])
                                 self.ui.task_table.setItem(row, col, item)
-
                         self.ui.task_table.resizeColumnsToContents()
+                        QMessageBox.information(self, "提示", "查询任务成功")
                     except Exception as e:
                         QMessageBox.critical(
                             self, "错误", f"更新任务列表失败:\n{str(e)}")
@@ -278,7 +278,7 @@ class MainWindow(QMainWindow):
                     delete_message = str(message)
 
                 if success:
-                    self.query_tasks_async()
+                    self.query_tasks()
                     QMessageBox.information(self, "成功", delete_message)
                 else:
                     QMessageBox.critical(self, "错误", f"删除任务失败:\n{delete_message}")
@@ -286,22 +286,10 @@ class MainWindow(QMainWindow):
         except Exception as e:
             logger.error(f"处理异步任务 {op_type} 结果失败: {e}")
             QMessageBox.critical(self, "错误", f"处理异步任务 {op_type} 结果失败: {e}")
-            if op_type == "login":
-                # 强制标记登录失败
-                self.ui.label_red_message.setText("登录失败！")
-                self.ui.stackedWidget_message.setCurrentIndex(2)
-                self.ui.pushButton_login.setEnabled(True)
-            self._restore_button_state(op_type)
-
-    def _restore_button_state(self, op_type):
-        """
-        根据操作类型恢复对应按钮的启用状态。
-        """
-        if op_type == "login":
+            self.ui.label_red_message.setText("登录失败！")
+            self.ui.stackedWidget_message.setCurrentIndex(2)
             self.ui.pushButton_login.setEnabled(True)
-        elif op_type == "dislogin":
             self.ui.pushButton_dislogin.setEnabled(True)
-        # 可以根据需要添加其他操作类型的按钮恢复逻辑
 
     def login(self):
         """
@@ -313,9 +301,9 @@ class MainWindow(QMainWindow):
 
         username = self.ui.lineEdit_username.text().strip()
         password = self.ui.lineEdit_password.text().strip()
-        # 传递操作类型作为参数
+        # 使用lambda函数绑定参数，直接传递已绑定参数的函数
         self.task_executor.execute_task(
-            lambda: ("login", networkmanager.login(username, password)),
+            func=lambda: networkmanager.login(username, password), 
             op_type="login"
         )
         self.save_credentials()
@@ -329,9 +317,9 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_dislogin.setEnabled(False)
 
         username = self.ui.lineEdit_username.text()
-        # 传递操作类型作为参数
+        # 直接传递函数和参数
         self.task_executor.execute_task(
-            lambda: ("dislogin", networkmanager.dislogin(username)),
+            func=lambda: networkmanager.dislogin(username), 
             op_type="dislogin"
         )
         self.save_credentials()
@@ -349,7 +337,7 @@ class MainWindow(QMainWindow):
             file_name = os.path.basename(file_path)
             self.ui.task_name_label.setText(file_name)
 
-    def create_task_async(self):
+    def create_task(self):
         """
         异步创建计划任务。
         """
@@ -361,18 +349,20 @@ class MainWindow(QMainWindow):
             return
 
         self.task_executor.execute_task(
-            lambda: ("create_task", self.task_manager.create_task(file_path))
+            func=lambda: self.task_manager.create_task(file_path), 
+            op_type="create_task"
         )
 
-    def query_tasks_async(self):
+    def query_tasks(self):
         """
         异步查询计划任务。
         """
         self.task_executor.execute_task(
-            lambda: (self.task_manager.query_tasks(),"query_tasks")
+            func=lambda: self.task_manager.query_tasks(), 
+            op_type="query_tasks"
         )
 
-    def delete_task_async(self):
+    def delete_task(self):
         """
         异步删除计划任务。
         """
@@ -390,7 +380,8 @@ class MainWindow(QMainWindow):
                 QMessageBox.Yes | QMessageBox.No
         ):
             self.task_executor.execute_task(
-                lambda: ("delete_task", self.task_manager.delete_task(full_task_name))
+                func=lambda: self.task_manager.delete_task(full_task_name), 
+                op_type="delete_task"
             )
 
     def create_exe(self):

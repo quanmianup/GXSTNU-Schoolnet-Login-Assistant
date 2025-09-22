@@ -7,8 +7,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>709</width>
-    <height>584</height>
+    <width>601</width>
+    <height>524</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -716,6 +716,9 @@ QPushButton{
                    </property>
                    <property name="checkable">
                     <bool>true</bool>
+                   </property>
+                   <property name="checked">
+                    <bool>false</bool>
                    </property>
                   </widget>
                  </item>
@@ -1536,7 +1539,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>709</width>
+     <width>601</width>
      <height>22</height>
     </rect>
    </property>

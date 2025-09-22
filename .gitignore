@@ -18,6 +18,7 @@ venv/
 .idea/
 .vscode/
 .trae/
+.spec-workflow/
 __pycache__/
 *.code-workspace
 

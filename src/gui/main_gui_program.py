@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 import time
 
-from PySide6.QtCore import Qt, QPoint, QTime, QEvent
+from PySide6.QtCore import Qt, QPoint, QTime, QEvent, QTimer
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QTableWidgetItem
 
 from src.core.AsyncTaskExecutor import AsyncTaskExecutor
@@ -40,6 +40,12 @@ class MainWindow(QMainWindow):
         self.task_executor = AsyncTaskExecutor()
         # 连接信号槽
         self.task_executor.finished.connect(self.handle_general_finished)
+        
+        # 初始化保活功能相关变量
+        self.keep_alive_timer = QTimer(self)
+        self.keep_alive_timer.setInterval(5000)  # 5秒
+        self.keep_alive_timer.timeout.connect(self._check_network_status_and_update_tabwiget)
+        self.keep_alive_timer.start()
         
         # 设置界面日志输出，连接到右侧的日志控件
         setup_logger(log_widget=self.ui.textBrowser_log)
@@ -81,6 +87,9 @@ class MainWindow(QMainWindow):
                 self.ui.stackedWidget_tab.setCurrentIndex(1),
                 self.query_tasks()
             ))
+        
+        # 连接保活按钮信号
+        self.ui.pushButton_keeplogin.clicked.connect(self._toggle_keep_network_online)
 
     def eventFilter(self, obj, event):
         """
@@ -116,6 +125,29 @@ class MainWindow(QMainWindow):
         """
         if event.button() == Qt.LeftButton:
             self.dragging = False
+    
+    def _toggle_keep_network_online(self):
+        """
+        切换保持网络在线功能的开关
+        """
+        if self.ui.pushButton_keeplogin.isChecked():
+            logger.info("保持网络功能已开启")
+        else:
+            logger.info("保持网络功能已关闭")
+    
+    def _check_network_status_and_update_tabwiget(self):
+        """
+        检查网络状态，先更新UI显示，再根据保活按钮状态决定是否尝试登录
+        """
+        # # 检查当前时间是否在00:00-7:00之间
+        # current_time = QTime.currentTime()
+        # if (current_time.hour() >= 0 and current_time.hour() < 7):
+        #     # 在禁用时间段，不执行保活操作
+        #     return
+        self.task_executor.execute_task(
+            func=lambda: networkmanager.check_network(), 
+            op_type="keep_alive_check"
+        )
 
     def setup_log_context_menu(self):
         """
@@ -283,6 +315,54 @@ class MainWindow(QMainWindow):
                 else:
                     QMessageBox.critical(self, "错误", f"删除任务失败:\n{delete_message}")
                     logger.error(f"删除任务失败: {delete_message}")
+            
+            elif op_type == "keep_alive_check":
+                # 保持网络在线检查结果处理
+                # 解析返回结果，格式为(success_status, status_message)
+                if isinstance(message, tuple) and len(message) == 2:
+                    status_success, status_message = message
+                else:
+                    status_success, status_message = success, message
+                
+                # 更新UI显示网络状态
+                if status_success:
+                    # 网络在线，显示成功状态
+                    self.ui.stackedWidget_message_netstatus.setCurrentIndex(1)
+                    logger.info(f"保持网络检查结果: {status_message}")
+                else:
+                    # 网络离线，显示失败状态
+                    self.ui.stackedWidget_message_netstatus.setCurrentIndex(2)
+                    logger.error(f"保持网络检查失败: {status_message}")
+                    
+                    # 检查保活按钮是否开启，如果开启则尝试登录
+                    if self.ui.pushButton_keeplogin.isChecked():
+                        # 在后台线程执行登录尝试
+                        def try_login():
+                            logger.warning("网络连接已断开，尝试重新登录")
+                            
+                            # 尝试登录5次直到成功
+                            username = self.ui.lineEdit_username.text().strip()
+                            password = self.ui.lineEdit_password.text().strip()
+                            
+                            for attempt in range(1, 6):
+                                logger.info(f"第 {attempt} 次登录尝试")
+                                if networkmanager.login(username, password):
+                                    logger.info("登录成功，网络已恢复连接")
+                                    return True, "登录成功"
+                                
+                                # 最后一次尝试失败后不再等待
+                                if attempt < 5:
+                                    # 等待一段时间后再次尝试
+                                    time.sleep(2)
+                            
+                            logger.error("连续5次登录尝试均失败")
+                            return False, "登录失败: 连续5次尝试均失败"
+                        
+                        # 立即执行登录尝试
+                        self.task_executor.execute_task(
+                            func=try_login, 
+                            op_type="keep_alive_check"
+                        )
         except Exception as e:
             logger.error(f"处理异步任务 {op_type} 结果失败: {e}")
             QMessageBox.critical(self, "错误", f"处理异步任务 {op_type} 结果失败: {e}")

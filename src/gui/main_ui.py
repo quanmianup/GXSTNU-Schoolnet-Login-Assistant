@@ -28,7 +28,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(709, 584)
+        MainWindow.resize(601, 524)
         MainWindow.setMinimumSize(QSize(4, 0))
         MainWindow.setTabletTracking(False)
         icon = QIcon()
@@ -337,6 +337,7 @@ class Ui_MainWindow(object):
         self.pushButton_keeplogin.setIcon(icon4)
         self.pushButton_keeplogin.setIconSize(QSize(25, 25))
         self.pushButton_keeplogin.setCheckable(True)
+        self.pushButton_keeplogin.setChecked(False)
 
         self.verticalLayout_2.addWidget(self.pushButton_keeplogin)
 
@@ -670,7 +671,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menuBar = QMenuBar(MainWindow)
         self.menuBar.setObjectName(u"menuBar")
-        self.menuBar.setGeometry(QRect(0, 0, 709, 22))
+        self.menuBar.setGeometry(QRect(0, 0, 601, 22))
         self.menulogMenu = QMenu(self.menuBar)
         self.menulogMenu.setObjectName(u"menulogMenu")
         self.menulogMenu.setTearOffEnabled(False)

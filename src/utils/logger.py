@@ -1,11 +1,8 @@
 import os
 import sys
-import time
 import os
-from pathlib import Path
 
 from PySide6.QtCore import QMetaObject, Qt, Q_ARG
-from PySide6.QtGui import QTextCursor
 from loguru import logger
 from config.credentials import credentials
 from src.core.TaskScheduler import TaskScheduler

@@ -175,10 +175,8 @@ class AsyncTaskExecutor(QObject):
             # 从活动任务列表中移除已完成的任务
             if task_id in self.active_tasks:
                 del self.active_tasks[task_id]
-            
             # 获取任务结果
             success, message, op_type = future.result()
-            # logger.debug(f"[任务回调] 完成: {task_id}, 成功: {success}")
             # 发射完成信号
             self.finished.emit(success, message, op_type)
         except (KeyboardInterrupt, SystemExit):

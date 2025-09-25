@@ -81,6 +81,15 @@ class NetworkManager:
         self.MAX_RETRY = credentials.get("MAX_RETRY")
         self.AUTH_DOMAIN = credentials.get("AUTH_DOMAIN")
         self.RETRY_INTERVAL = credentials.get("RETRY_INTERVAL")
+        
+        # 添加网络状态跟踪变量，用于控制错误日志只在状态变化时显示
+        self._last_network_status = None  # None: 未初始化, True: 网络在线, False: 网络离线
+        
+        # 添加其他状态跟踪变量
+        self._last_auth_params_status = None  # 记录最后一次获取认证参数的状态
+        self._last_empty_credentials_status = None  # 记录最后一次空凭证检查的状态
+        self._last_logout_fail_status = None  # 记录最后一次登出失败的状态
+        self._last_get_auth_urls_status = None  # 记录最后一次获取认证链接的状态
 
     def check_network(self):
         """
@@ -95,18 +104,31 @@ class NetworkManager:
             response = requests.get(url=self.TEST_URL, headers=headers, timeout=self.RETRY_INTERVAL)
             # 判断状态码是否为 200 且响应 URL 不包含认证域名
             is_connected = response.status_code == 200 and self.AUTH_DOMAIN not in response.url
+            
+            # 跟踪网络状态变化，只在状态变化时输出日志
             if not is_connected:
-                logger.warning("网络未连接或处于认证页面")
+                if self._last_network_status is not False:
+                    logger.warning("网络未连接或处于认证页面")
+                self._last_network_status = False
                 return False
             return True
         except requests.exceptions.ConnectionError:
-            logger.error('网络连接异常: 无法连接到测试网站')
+            # 只在状态变化时记录错误
+            if self._last_network_status is not False:
+                logger.error('网络连接异常: 无法连接到测试网站')
+            self._last_network_status = False
             return False
         except requests.exceptions.Timeout:
-            logger.error(f'网络连接超时: 超过{self.RETRY_INTERVAL}秒未收到响应')
+            # 只在状态变化时记录错误
+            if self._last_network_status is not False:
+                logger.error(f'网络连接超时: 超过{self.RETRY_INTERVAL}秒未收到响应')
+            self._last_network_status = False
             return False
         except Exception as e:
-            logger.error(f'网络检测异常: {str(e)}')
+            # 只在状态变化时记录错误
+            if self._last_network_status is not False:
+                logger.error(f'网络检测异常: {str(e)}')
+            self._last_network_status = False
             return False
 
     def get_auth_urls(self):
@@ -129,23 +151,37 @@ class NetworkManager:
             
             # 检查必要参数是否获取成功
             if not ip or not mac:
-                logger.error("未能从认证页面获取到IP、mac参数")
+                # 只在状态变化时记录错误
+                if self._last_auth_params_status is not False:
+                    logger.error("未能从认证页面获取到IP、mac参数")
+                self._last_auth_params_status = False
                 return None
+            # 更新状态为成功
+            self._last_auth_params_status = True
             
             return {
                 'login': f'https://{self.AUTH_DOMAIN}/webauth.do?wlanacip=172.16.1.82&wlanuserip={ip}&mac={mac}',
                 'disconnect': f'https://{self.AUTH_DOMAIN}/webdisconn.do?wlanacip=172.16.1.82&wlanuserip={ip}&mac={mac}',
                 'check': f'https://{self.AUTH_DOMAIN}/getAuthResult.do',
-                # 'test_url': self.TEST_URL,
             }
         except requests.exceptions.Timeout:
-            logger.error("获取认证链接超时，请确认网络已连接切处于校园网环境下")
+            # 只在状态变化时记录错误
+            if self._last_get_auth_urls_status != "timeout":
+                logger.error("获取认证链接超时，请确认网络已连接切处于校园网环境下")
+            self._last_get_auth_urls_status = "timeout"
             return None
         except requests.exceptions.ConnectionError:
-            logger.error("获取认证链接连接失败，请确认当前处于校园网环境下")
+            # 只在状态变化时记录错误
+            if self._last_get_auth_urls_status != "connection_error":
+                logger.error("获取认证链接连接失败，请确认当前处于校园网环境下")
+            self._last_get_auth_urls_status = "connection_error"
             return None
         except Exception as e:
-            logger.error(f"获取认证链接异常: {str(e)}")
+            # 只在状态变化时记录错误
+            error_msg = f"获取认证链接异常: {str(e)}"
+            if self._last_get_auth_urls_status != error_msg:
+                logger.error(error_msg)
+            self._last_get_auth_urls_status = error_msg
             return None
 
     def get_data(self, username=None, password=None):
@@ -214,8 +250,13 @@ class NetworkManager:
         
         # 验证用户名和密码
         if not username or not password:
-            logger.error("用户名或密码为空！")
+            # 只在状态变化时记录错误
+            if self._last_empty_credentials_status is not False:
+                logger.error("用户名或密码为空！")
+            self._last_empty_credentials_status = False
             return False
+        # 更新状态为成功
+        self._last_empty_credentials_status = True
             
         # 获取认证URLs
         auth_urls = self.get_auth_urls()
@@ -284,8 +325,13 @@ class NetworkManager:
         
         # 验证用户名
         if not username:
-            logger.error("用户名为空，登出失败")
+            # 只在状态变化时记录错误
+            if self._last_empty_credentials_status is not False:
+                logger.error("用户名为空，登出失败")
+            self._last_empty_credentials_status = False
             return False
+        # 更新状态为成功
+        self._last_empty_credentials_status = True
             
         # 获取认证URLs
         auth_urls = self.get_auth_urls()
@@ -316,7 +362,11 @@ class NetworkManager:
             except Exception as e:
                 logger.warning(f'第 {attempt} 次登出过程中发生异常: {str(e)}')
         
-        logger.error(f"{username}登出失败：请检查账号密码是否正确，或先手动下线已登录的账号")
+        # 只在状态变化时记录错误
+        error_msg = f"{username}登出失败：请检查账号密码是否正确，或先手动下线已登录的账号"
+        if self._last_logout_fail_status != error_msg:
+            logger.error(error_msg)
+        self._last_logout_fail_status = error_msg
         return False
 
 

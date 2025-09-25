@@ -9,7 +9,7 @@ from pathlib import Path
 import time
 
 from PySide6.QtCore import Qt, QPoint, QTime, QEvent, QTimer
-from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QTableWidgetItem
+from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QTableWidgetItem, QInputDialog
 
 from src.core.AsyncTaskExecutor import AsyncTaskExecutor
 from src.core.NetworkManager import networkmanager
@@ -139,15 +139,13 @@ class MainWindow(QMainWindow):
         """
         检查网络状态，先更新UI显示，再根据保活按钮状态决定是否尝试登录
         """
-        # # 检查当前时间是否在00:00-7:00之间
-        # current_time = QTime.currentTime()
-        # if (current_time.hour() >= 0 and current_time.hour() < 7):
-        #     # 在禁用时间段，不执行保活操作
-        #     return
+        logger.LOG_LEVEL = "CRITICAL"
+        setup_logger()
         self.task_executor.execute_task(
             func=lambda: networkmanager.check_network(), 
             op_type="keep_alive_check"
         )
+
 
     def setup_log_context_menu(self):
         """
@@ -178,6 +176,10 @@ class MainWindow(QMainWindow):
     def handle_general_finished(self, success, message, op_type="unknown"):
         """
         处理异步任务完成后的回调。
+        - finished: 任务完成信号，参数为(success: bool, message: str, op_type: str)
+        # success: 任务是否执行成功的布尔值
+        # message: 任务执行返回结果或错误信息
+        # op_type: 操作类型标识
         """
         try:
             if op_type == "login":
@@ -317,57 +319,35 @@ class MainWindow(QMainWindow):
                     logger.error(f"删除任务失败: {delete_message}")
             
             elif op_type == "keep_alive_check":
-                # 保持网络在线检查结果处理
-                # 解析返回结果，格式为(success_status, status_message)
-                if isinstance(message, tuple) and len(message) == 2:
-                    status_success, status_message = message
-                else:
-                    status_success, status_message = success, message
-                
-                # 更新UI显示网络状态
-                if status_success:
-                    # 网络在线，显示成功状态
-                    self.ui.stackedWidget_message_netstatus.setCurrentIndex(1)
-                    logger.info(f"保持网络检查结果: {status_message}")
-                else:
-                    # 网络离线，显示失败状态
-                    self.ui.stackedWidget_message_netstatus.setCurrentIndex(2)
-                    logger.error(f"保持网络检查失败: {status_message}")
-                    
-                    # 检查保活按钮是否开启，如果开启则尝试登录
-                    if self.ui.pushButton_keeplogin.isChecked():
-                        # 在后台线程执行登录尝试
-                        def try_login():
-                            logger.warning("网络连接已断开，尝试重新登录")
-                            
-                            # 尝试登录5次直到成功
-                            username = self.ui.lineEdit_username.text().strip()
-                            password = self.ui.lineEdit_password.text().strip()
-                            
-                            for attempt in range(1, 6):
-                                logger.info(f"第 {attempt} 次登录尝试")
-                                if networkmanager.login(username, password):
-                                    logger.info("登录成功，网络已恢复连接")
-                                    return True, "登录成功"
-                                
-                                # 最后一次尝试失败后不再等待
-                                if attempt < 5:
-                                    # 等待一段时间后再次尝试
-                                    time.sleep(2)
-                            
-                            logger.error("连续5次登录尝试均失败")
-                            return False, "登录失败: 连续5次尝试均失败"
-                        
-                        # 立即执行登录尝试
-                        self.task_executor.execute_task(
-                            func=try_login, 
-                            op_type="keep_alive_check"
-                        )
+                # 网络在线检测结果处理
+                current_time = QTime.currentTime()
+                if success:
+                    if message:
+                        # 网络在线，显示成功状态
+                        self.ui.stackedWidget_message_netstatus.setCurrentIndex(1)
+                        # 检查是否需要记录网络在线日志：
+                        # 1. 如果是首次检测（_last_network_status不存在）
+                        # 2. 或者之前是离线状态（_last_network_status为False）
+                        if not hasattr(self, '_last_network_status') or not self._last_network_status:
+                            logger.info(f"网络在线")
+                        # 更新网络状态记录
+                        self._last_network_status = True
+                    else:
+                        # 网络离线，显示失败状态
+                        self.ui.stackedWidget_message_netstatus.setCurrentIndex(2)
+                        # 更新网络状态记录
+                        self._last_network_status = False
+                        # 检查保活按钮是否开启，如果开启则尝试登录,检查当前时间是否在00:00-7:00之间
+                        if self.ui.pushButton_keeplogin.isChecked() :
+                        # and (current_time.hour() <= 24 and current_time.hour() > 7):
+                            # 在后台线程执行登录尝试
+                            networkmanager.login()
         except Exception as e:
             logger.error(f"处理异步任务 {op_type} 结果失败: {e}")
             QMessageBox.critical(self, "错误", f"处理异步任务 {op_type} 结果失败: {e}")
             self.ui.label_red_message.setText("登录失败！")
             self.ui.stackedWidget_message.setCurrentIndex(2)
+            self.ui.stackedWidget_message_netstatus.setCurrentIndex(0)
             self.ui.pushButton_login.setEnabled(True)
             self.ui.pushButton_dislogin.setEnabled(True)
 
@@ -762,7 +742,28 @@ def run():
     """
     启动主界面。
     """
+    # 首先创建QApplication实例
     application = QApplication(sys.argv)
+    # 创建并显示主窗口
     window = MainWindow()
     window.show()
+    
+    # 弹出密码验证对话框
+    # 创建输入对话框实例以自定义按钮文本
+    input_dialog = QInputDialog(window)
+    input_dialog.setWindowTitle('密码验证')
+    input_dialog.setLabelText('请输入密码以使用程序:')
+    input_dialog.setOkButtonText('确认')
+    input_dialog.setCancelButtonText('取消')
+    # # 禁用窗口功能，直到密码验证通过
+    # window.setEnabled(False)
+    # while True:
+    #     # 显示对话框并获取结果
+    #     if input_dialog.exec() == QInputDialog.Accepted:
+    #         if input_dialog.textValue() == '12344321':
+    #             window.setEnabled(True)
+    #             break
+    #         QMessageBox.warning(window, '密码错误', '密码不正确，请重新输入！')
+    #     else:
+    #         sys.exit()
     sys.exit(application.exec())

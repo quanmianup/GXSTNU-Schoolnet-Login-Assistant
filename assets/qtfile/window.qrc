@@ -1,6 +1,7 @@
 <RCC>
   <qresource prefix="images">
     <file>../images/close.png</file>
+    <file>../images/QC.jpg</file>
     <file>../images/internet.png</file>
     <file>../images/login.png</file>
     <file>../images/dislogin.png</file>

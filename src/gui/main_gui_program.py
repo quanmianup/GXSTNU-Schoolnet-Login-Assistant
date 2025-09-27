@@ -5,19 +5,17 @@ import os
 import shutil
 import subprocess
 import sys
-from pathlib import Path
-import time
 
 from PySide6.QtCore import Qt, QPoint, QTime, QEvent, QTimer
-from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QTableWidgetItem, QInputDialog
+from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QTableWidgetItem, QDialog, QDialogButtonBox
 
 from src.core.AsyncTaskExecutor import AsyncTaskExecutor
 from src.core.NetworkManager import networkmanager
-from src.gui.main_ui import *
+from src.gui.main_ui import Ui_MainWindow
+from src.gui.PswdInput_ui import Ui_Dialog
 from src.utils.logger import logger, setup_logger
 from src.core.TaskScheduler import TaskScheduler
-from config.credentials import credentials
-
+from src.core.Credentials import credentials
 
 
 class MainWindow(QMainWindow):
@@ -139,13 +137,12 @@ class MainWindow(QMainWindow):
         """
         检查网络状态，先更新UI显示，再根据保活按钮状态决定是否尝试登录
         """
-        logger.LOG_LEVEL = "CRITICAL"
-        setup_logger()
+        # logger.LOG_LEVEL = "CRITICAL"
+        # setup_logger()
         self.task_executor.execute_task(
             func=lambda: networkmanager.check_network(), 
             op_type="keep_alive_check"
         )
-
 
     def setup_log_context_menu(self):
         """
@@ -522,197 +519,6 @@ class MainWindow(QMainWindow):
             self.ui.label_red_message.setText("EXE文件生成失败")
 
     @staticmethod
-    def _generate_auto_login_script(username, password):
-        """
-        生成自动登录脚本内容。
-        """
-        # 使用单引号构建整个脚本内容，避免三引号嵌套导致的解析问题
-        script_content = '''
-import sys
-import time
-import socket
-from pathlib import Path
-from typing import Optional
-
-# 设置编码
-import io
-import os
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
-
-class LoginHelper:
-    """自动登录助手类，封装登录逻辑和工具方法"""
-    
-    def __init__(self, username: str, password: str):
-        self.username = username
-        self.password = password
-        self.setup_project_paths()
-        self._import_required_modules()
-        
-    def setup_project_paths(self) -> None:
-        """设置项目路径，处理开发环境和打包环境的差异"""
-        # 确定基础路径，处理不同运行环境
-        if getattr(sys, 'frozen', False):
-            # 打包后的环境，从临时解压目录获取路径
-            self.base_path = Path(sys._MEIPASS)
-        else:
-            # 开发环境，从代码文件位置获取路径
-            self.base_path = Path(__file__).parent.parent.parent
-            
-        # 动态构建模块路径
-        for path_segment in ['app', 'app/core', 'app/utils']:
-            sys.path.insert(0, str(self.base_path / path_segment))
-    
-    def _import_required_modules(self) -> None:
-        """动态导入必要的模块，确保在运行时可用"""
-        global networkmanager, logger, setup_logger
-        try:
-            from app.core.network import networkmanager
-            from app.utils.logger import logger, setup_logger
-            setup_logger(username=self.username)
-        except ImportError as e:
-            print(f"导入模块失败: {{str(e)}}")
-            # 尝试备用导入路径
-            try:
-                # 尝试直接导入，适用于独立运行场景
-                import networkmanager
-                import logger
-                setup_logger = logger.setup_logger
-                setup_logger(username=self.username)
-            except ImportError:
-                print("无法导入必要的模块，请确保程序目录结构正确。")
-                sys.exit(1)
-    
-    def check_network_connectivity(self, host: str = "www.baidu.com", port: int = 80, timeout: int = 3) -> bool:
-        """检查网络连接是否正常"""
-        try:
-            with socket.create_connection((host, port), timeout=timeout):
-                return True
-        except OSError:
-            return False
-    
-    def login(self, max_retries: int = 3, retry_delay: int = 2) -> bool:
-        """执行登录操作，支持重试机制"""
-        retries = 0
-        
-        # 首先检查网络连接
-        if not self.check_network_connectivity():
-            print("网络连接不可用，请检查网络设置。")
-            logger.error("网络连接不可用，请检查网络设置。")
-            return False
-            
-        while retries < max_retries:
-            try:
-                print(f"{{'重试' if retries > 0 else '尝试'}}登录账号: {{self.username}}")
-                result = networkmanager.login(self.username, self.password)
-                
-                if result:
-                    print("登录成功！")
-                    logger.info("自动登录成功！")
-                    return True
-                else:
-                    retries += 1
-                    error_msg = f"登录失败{{', 将重试' if retries < max_retries else ''}}！"
-                    print(error_msg)
-                    logger.error(error_msg)
-                    
-                    if retries < max_retries:
-                        print(f"等待 {{retry_delay}} 秒后重试...")
-                        time.sleep(retry_delay)
-            except Exception as e:
-                retries += 1
-                error_msg = f"登录过程中出错: {{str(e)}}{{', 将重试' if retries < max_retries else ''}}"
-                print(error_msg)
-                logger.error(error_msg)
-                
-                if retries < max_retries:
-                    print(f"等待 {{retry_delay}} 秒后重试...")
-                    time.sleep(retry_delay)
-        
-        return False
-
-    def run(self) -> None:
-        """运行自动登录流程"""
-        try:
-            print("=== 校园网自动登录工具 ===")
-            print(f"当前时间: {{time.strftime('%Y-%m-%d %H:%M:%S')}}")
-            
-            # 执行登录
-            success = self.login()
-            
-            # 登录结果后显示状态信息
-            if success:
-                print("自动登录流程已完成。")
-                logger.info("自动登录流程已完成。")
-            else:
-                print("自动登录流程失败，请检查账号密码或网络状态。")
-                logger.error("自动登录流程失败，请检查账号密码或网络状态。")
-                
-        except KeyboardInterrupt:
-            print("\n程序已被用户中断。")
-            logger.info("程序已被用户中断。")
-        except Exception as e:
-            print(f"程序运行时发生未预期错误: {{str(e)}}")
-            logger.error(f"程序运行时发生未预期错误: {{str(e)}}")
-
-if __name__ == '__main__':
-    # 创建并运行登录助手
-    login_helper = LoginHelper(username='{0}', password='{1}')
-    login_helper.run()
-    
-    # 保持终端打开，方便查看错误信息
-    try:
-        input("\n按回车键退出...")
-    except (KeyboardInterrupt, EOFError):
-        pass  # 允许用户通过Ctrl+C或Ctrl+D退出
-'''
-        
-        # 使用format方法进行变量替换，确保正确处理字符串
-        return script_content.format(username, password)
-
-    def _build_pyinstaller_params(self, script_path, exe_name):
-        """
-        构建 PyInstaller 打包参数。
-        """
-        # 判断是否为打包后的环境
-        if getattr(sys, 'frozen', False):
-            project_root = Path(sys._MEIPASS)
-        else:
-            project_root = Path(__file__).parent.parent.parent
-
-        config_path = project_root / "config"
-        app_path = project_root / "app"
-        core_path = project_root / "app" / "core"
-        utils_path = project_root / "app" / "utils"
-        icon_path = project_root / "assets" / "images" / "main_icon.ico"
-        logger.debug(f"项目根目录: {project_root}")
-        pyinstaller_path = shutil.which('pyinstaller')
-        if not pyinstaller_path:
-            logger.error("未找到 pyinstaller 可执行文件，请检查是否已安装。")
-            raise FileNotFoundError("未找到 pyinstaller 可执行文件，请检查是否已安装。")
-        data_sep = ';' if sys.platform.startswith('win') else ':'
-        return [
-            pyinstaller_path,
-            # '--onefile',
-            '--console',
-            f'--name={exe_name}',
-            '--debug=all',
-            '--hidden-import=app',  # 显式添加 app 隐藏依赖
-            '--hidden-import=app.core',  # 显式添加 app.core 隐藏依赖
-            '--hidden-import=app.core.network',
-            '--hidden-import=app.utils.logger',
-            '--hidden-import=requests',
-            '--collect-all=app',  # 收集 app 模块及其所有子模块
-            '--collect-all=requests',
-            '--log-level=DEBUG',
-            f'--add-data={app_path.as_posix().strip()}{data_sep}app',
-            f'--add-data={config_path.as_posix().strip()}{data_sep}config',
-            f'--icon={icon_path.as_posix().strip()}' if icon_path.exists() else '--noconsole',
-            f'--distpath={str(self.task_manager.task_folder)}',
-            str(script_path)
-        ]
-
-    @staticmethod
     def _generate_exe(script_path, params):
         """
         执行 PyInstaller 命令生成 EXE 文件。
@@ -738,6 +544,14 @@ if __name__ == '__main__':
             return False
 
 
+class PasswordDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.ui = Ui_Dialog()
+        self.ui.setupUi(self)
+        self.ui.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setText("确认")
+        self.ui.buttonBox.button(QDialogButtonBox.StandardButton.Cancel).setText("取消")
+
 def run():
     """
     启动主界面。
@@ -747,23 +561,18 @@ def run():
     # 创建并显示主窗口
     window = MainWindow()
     window.show()
-    
-    # 弹出密码验证对话框
-    # 创建输入对话框实例以自定义按钮文本
-    input_dialog = QInputDialog(window)
-    input_dialog.setWindowTitle('密码验证')
-    input_dialog.setLabelText('请输入密码以使用程序:')
-    input_dialog.setOkButtonText('确认')
-    input_dialog.setCancelButtonText('取消')
-    # # 禁用窗口功能，直到密码验证通过
-    # window.setEnabled(False)
-    # while True:
-    #     # 显示对话框并获取结果
-    #     if input_dialog.exec() == QInputDialog.Accepted:
-    #         if input_dialog.textValue() == '12344321':
-    #             window.setEnabled(True)
-    #             break
-    #         QMessageBox.warning(window, '密码错误', '密码不正确，请重新输入！')
-    #     else:
-    #         sys.exit()
+    window.setEnabled(False)
+    password_dialog = PasswordDialog(window)
+    # # =================================================================
+    # 禁用窗口功能，直到密码验证通过
+    while True:
+        if password_dialog.exec() == QDialog.Accepted:
+            if password_dialog.ui.lineEdit_pswdInput.text() == 'pd11040870':
+                window.setEnabled(True)
+                break
+            QMessageBox.warning(window, '密码错误', '密码不正确，请重新输入！')
+        else:
+            sys.exit()
+    # # =================================================================
+
     sys.exit(application.exec())

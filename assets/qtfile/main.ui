@@ -793,7 +793,7 @@ QPushButton{
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>220</width>
+                          <width>210</width>
                           <height>30</height>
                          </rect>
                         </property>
@@ -855,7 +855,7 @@ font: 11pt &quot;黑体&quot;;</string>
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>220</width>
+                          <width>210</width>
                           <height>30</height>
                          </rect>
                         </property>
@@ -911,7 +911,7 @@ font: 11pt &quot;黑体&quot;;</string>
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>220</width>
+                          <width>210</width>
                           <height>30</height>
                          </rect>
                         </property>

@@ -4,7 +4,7 @@ import requests
 
 from src.utils.logger import logger
 # 导入配置
-from config.credentials import credentials
+from src.core.Credentials import credentials
 
 
 class NetworkManager:

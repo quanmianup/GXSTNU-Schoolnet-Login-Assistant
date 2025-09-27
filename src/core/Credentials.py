@@ -1,14 +1,20 @@
 import base64
 import os
 import re
-import sys
+import base64
+import importlib.util
+import base64
+from Crypto.Random import get_random_bytes
 
+from src.utils.logger import logger
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad, pad
 
 from src.utils.logger import logger
-from config.local_credentials import CREDENTIALS
+from src.core.TaskScheduler import TaskScheduler
 
+# 全局CREDENTIALS变量
+CREDENTIALS = {}
 
 class CredentialManager:
     """
@@ -18,87 +24,85 @@ class CredentialManager:
 
     使用方法：
     1. 获取全局单例：
-       >>> from config.credentials import credentials
+       >>> from src.core.Credentials import credentials
 
     2. 读取凭证：
-       >>> username = credentials.get("username")  # 获取明文用户名
        >>> password = credentials.get("password")    # 获取解密后的密码
 
     3. 写入凭证：
-        >>> credentials.set("username", "new_user")
         >>> credentials.set("password", "new_pass")  # 自动加密存储
         >>> credentials.set("custom_key", "value")  # 设置自定义键值对
 
     4. 保存配置：
-       >>> credentials.save_to_file()  # 持久化到配置文件
+       >>> credentials.save_to_file()  # 持久化到本地配置文件
 
     注意事项：
     - 首次运行时会自动创建 config/local_credentials.py 配置文件
     - 密码会自动加密存储，明文仅存在于内存中
     - 修改凭证后自动调用 save_to_file() 持久化
-    - 当配置文件中未设置 ENCRYPTED_KEY 时会抛出 ValueError
     """
 
     def __init__(self):
         """
         初始化凭证管理器
-
-        初始化流程：
         1. 检查配置文件是否存在
         2. 若不存在则创建默认配置文件
         3. 加载加密密钥并验证有效性
-
-        异常：
-            ValueError: 当配置文件中未设置ENCRYPTED_KEY时抛出
         """
         self._cache = {}
+        self.KEY = None
+        self.task_folder = TaskScheduler().task_folder
         self.CREDENTIALS_file_path = self._get_config_path()
-        if not CREDENTIALS:
+        self._load_credentials()
+        self._load_key()
+    
+    def _load_credentials(self):
+        """
+        从配置文件中动态加载CREDENTIALS配置
+        """
+        global CREDENTIALS
+        
+        # 检查配置文件是否存在
+        if not os.path.exists(self.CREDENTIALS_file_path):
             logger.info("未找到配置文件，正在创建默认配置...")
             self.create_local_credentials_file()
+        
+        # 使用importlib动态导入模块
+        try:
+            spec = importlib.util.spec_from_file_location("local_credentials", self.CREDENTIALS_file_path)
+            local_credentials = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(local_credentials)
+            # 更新全局CREDENTIALS变量
+            if hasattr(local_credentials, 'CREDENTIALS'):
+                CREDENTIALS = local_credentials.CREDENTIALS
+            else:
+                logger.error("配置文件中未找到CREDENTIALS变量")
+                # 如果没有找到，创建空的CREDENTIALS
+                raise ValueError("配置文件中未找到CREDENTIALS变量")
+        except Exception as e:
+            logger.error(f"加载配置文件失败: {str(e)}")
+            raise ValueError(f"加载配置文件失败: {str(e)}")
+
+    def _load_key(self):
         encrypted_key = CREDENTIALS.get('ENCRYPTED_KEY')
         if not encrypted_key:
-            logger.error("未设置 ENCRYPTED_KEY，请先初始化密钥")
-            raise ValueError("未设置 ENCRYPTED_KEY，请先初始化密钥")
+            logger.error("未设置ENCRYPTED_KEY，正在初始化密钥")
+            key = get_random_bytes(32)
+            key_b64 = base64.b64encode(key).decode('utf-8')
+            CREDENTIALS['ENCRYPTED_KEY'] = key_b64
+            self.save_to_file()
+            logger.info("✅ 密钥已生成并写入配置文件")
         self.KEY = base64.b64decode(encrypted_key)
 
-    @staticmethod
-    def _get_config_path():
+    def _get_config_path(self):
         """
         获取配置文件路径，兼容不同操作系统和打包环境
 
         返回:
             str: 配置文件的完整路径
         """
-        if getattr(sys, 'frozen', False):
-            # 打包后的exe文件路径
-            base_path = sys._MEIPASS
-
-            # 替换方案
-
-            # # 打包后的exe文件路径（使用公开属性）
-            # base_path = os.path.dirname(sys.executable)
-            # # 尝试定位资源目录（PyInstaller兼容方案）
-            # if 'MEIPASS' in os.environ:
-            #     base_path = os.environ['MEIPASS']
-            # else:
-            #     # 查找可能的资源目录
-            #     possible_paths = [
-            #         os.path.join(base_path, '_internal'),
-            #         os.path.join(base_path, 'dist'),
-            #         os.path.join(base_path, 'build')
-            #     ]
-            #     for path in possible_paths:
-            #         if os.path.exists(path):
-            #             base_path = path
-            #             break
-
-            # 替换方案
-        else:
-            # 开发环境路径
-            base_path = os.path.dirname(os.path.abspath(__file__))
-            return os.path.join(base_path, 'local_credentials.py')
-        return os.path.join(base_path, 'config', 'local_credentials.py')
+        
+        return os.path.join(self.task_folder, 'config', 'local_credentials.py')
 
     def _encrypt(self, data):
         """
@@ -177,7 +181,6 @@ class CredentialManager:
             # 解密失败时返回默认值并记录日志
             logger.error(f"获取凭证失败，key={key}: {str(e)}")
             return default
-
 
     def set(self, key, value):
         """
@@ -261,7 +264,7 @@ class CredentialManager:
 """
 CREDENTIALS = {
     # 加密后的密钥（Base64 编码）
-    'ENCRYPTED_KEY': '30a711f64cae76ff8f347e248c5c0ed5',
+    'ENCRYPTED_KEY': '',
     'ENCRYPTED_PASSWORD': '',
     'USERNAME': '',
 

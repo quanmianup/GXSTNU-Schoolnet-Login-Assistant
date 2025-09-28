@@ -7,5 +7,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from src.core.NetworkManager import networkmanager
 
 if __name__ == '__main__':
-    networkmanager.login()
-    time.sleep(2)
+    for i in range(1,6):
+        networkmanager.login()
+        print(f'尝试第{i}次登录...')
+        if networkmanager.check_network():
+            print('登录成功')
+            break
+        time.sleep(1)

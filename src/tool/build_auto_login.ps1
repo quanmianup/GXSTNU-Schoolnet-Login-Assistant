@@ -6,7 +6,7 @@
     Double-click this script to run the packaging process
 .NOTES
     File Name: build_auto_login.ps1
-    Version: 1.5
+    Version: 1.0
     Author: Auto generated
     Encoding: UTF-8 with BOM
 #>
@@ -57,12 +57,12 @@ $PyInstallerArgs = @(
     '--name=AutoLoginScript', # 可执行文件名称
     "--icon=$IconFile",     # 设置应用图标，使用引号包裹整个参数
     "--distpath=$DistDir",
-    "--workpath=$BuildDir",
-    # 添加隐藏的导入以确保所有依赖都被包含
+    "--log-level WARN",
+    "--clean",
     '--hidden-import=src.core.NetworkManager',
     '--hidden-import=src.utils.logger',
     '--hidden-import=requests',
-    '--hidden-import=pycryptodome',
+    '--hidden-import=Crypto',
     '--hidden-import=loguru',
     "$SourceScript"
 )
@@ -80,26 +80,7 @@ try {
     if ($LASTEXITCODE -eq 0) {
         Write-Host "`nPackaging successful! Executable file generated at: $DistDir" -ForegroundColor Green
         Write-Host "Note: When running the generated exe file, the console will display log output." -ForegroundColor Cyan
-        
-        # Clean up temporary files
-        Write-Host "`nCleaning up temporary files..." -ForegroundColor Green
-        
-        # Delete build directory
-        if (Test-Path -Path $BuildDir -PathType Container) {
-            Write-Host "Deleting build directory: $BuildDir" -ForegroundColor Yellow
-            Remove-Item -Path $BuildDir -Recurse -Force
-        }
-        
-        # Delete spec file
-        if (Test-Path -Path $SpecFile -PathType Leaf) {
-            Write-Host "Deleting spec file: $SpecFile" -ForegroundColor Yellow
-            Remove-Item -Path $SpecFile -Force
-        }
-        
-        Write-Host "Temporary files cleaned up." -ForegroundColor Green
-    } else {
-        throw "PyInstaller execution failed, exit code: $LASTEXITCODE"
-    }
+    } 
 } catch {
         Write-Host "Error: Problem occurred during packaging: $_" -ForegroundColor Red
         Read-Host "Press Enter to exit..."
@@ -107,4 +88,5 @@ try {
     }
 
 # Prompt user that packaging is complete
-Read-Host "Packaging process completed, press Enter to exit..."
+Write-Host "Packaging process completed, press Enter to exit..."
+Read-Host 

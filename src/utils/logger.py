@@ -1,6 +1,5 @@
 import os
 import sys
-import os
 
 from PySide6.QtCore import QMetaObject, Qt, Q_ARG
 from loguru import logger
@@ -90,27 +89,6 @@ def setup_logger(username=None, log_widget=None):
     username = username or credentials.get("username", "default")
     log_file_name = f"{username}.log"
 
-    # # 确定日志目录
-    # if getattr(sys, 'frozen', False):
-    #     # 打包成 exe 的环境
-    #     log_dir = TaskScheduler().task_folder / "logs"
-    # else:
-    #     # 开发环境，获取项目根目录
-    #     current_path = os.path.abspath(__file__)
-    #     base_path = os.path.dirname(current_path)
-
-    #     while True:
-    #         # 检查当前目录是否有 requirements.txt
-    #         if os.path.isfile(os.path.join(base_path, 'requirements.txt')):
-    #             break
-    #         parent_path = os.path.dirname(base_path)
-    #         if parent_path == base_path:
-    #             # 到达文件系统根目录，仍未找到项目根目录标识，抛出错误
-    #             raise FileNotFoundError("在开发环境下未找到项目根目录标识文件 'requirements.txt'")
-    #         base_path = parent_path
-
-    #     log_dir = os.path.join(base_path, "logs")
-
     # 日志目录为系统盘根目录下的ScheduledTasks/logs文件夹
     log_dir = TaskScheduler().task_folder / "logs"
     # 创建日志目录，若不存在
@@ -171,7 +149,6 @@ def setup_logger(username=None, log_widget=None):
 
 # 初始化默认 logger
 try:
-    print("初始化默认日志系统...")
     setup_logger()
 except FileNotFoundError as e:
     print(f"日志初始化失败: {e}")

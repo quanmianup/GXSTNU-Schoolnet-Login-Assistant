@@ -30,7 +30,8 @@ class TaskScheduler:
         try:
             time_str = QTime.currentTime().toString("HH:mm:ss")
             cmd = [
-                "schtasks", "/Create", "/TN", task_name,
+                "schtasks", "/Create", 
+                "/TN", task_name,
                 "/TR", file_path,
                 "/SC", "DAILY",
                 "/ST", time_str,

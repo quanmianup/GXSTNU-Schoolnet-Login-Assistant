@@ -29,7 +29,6 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)
         self.setWindowFlag(Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.ui.time_edit.setTime(QTime.currentTime())
         self.ui.lineEdit_username.setText(credentials.get('username', ''))
         self.ui.lineEdit_password.setText(credentials.get('password', ''))
         self.ui.label_black_message.setText("")
@@ -83,6 +82,7 @@ class MainWindow(QMainWindow):
         self.ui.pushButton_tab_manege.clicked.connect(
             lambda: (
                 self.ui.stackedWidget_tab.setCurrentIndex(1),
+                self.ui.time_edit.setTime(QTime.currentTime()),
                 self.query_tasks()
             ))
         
@@ -260,8 +260,8 @@ class MainWindow(QMainWindow):
                         self, "成功", f"计划任务 '{file_name}' 创建成功！")
                     logger.info(f"计划任务'{file_name}'创建成功！")
                 else:
-                    QMessageBox.critical(self, "错误", f"创建任务失败:\n{message}")
-                    logger.error(f"创建任务失败: {message}")
+                    QMessageBox.critical(self, "错误", f"创建任务失败:\n{str(message[1])}")
+                    logger.error(f"创建任务失败: {str(message[1])}")
             
             elif op_type == "query_tasks":
                 # 查询任务结果处理
@@ -271,6 +271,10 @@ class MainWindow(QMainWindow):
                         logger.error(f"查询任务返回结果不是列表类型，实际类型: {type(task_list).__name__}，结果内容: {task_list}")
                         QMessageBox.critical(
                             self, "错误", "查询任务返回结果格式错误")
+                        return
+                    if not task_list:
+                        QMessageBox.information(
+                            self, "提示", "没有查询到匹配的任务")
                         return
                     # 更新任务列表
                     try:
@@ -294,9 +298,6 @@ class MainWindow(QMainWindow):
                         QMessageBox.critical(
                             self, "错误", f"更新任务列表失败:\n{str(e)}")
                         logger.error(f"更新任务列表失败: {str(e)}")
-                    if not task_list:
-                        QMessageBox.information(
-                            self, "提示", "没有查询到匹配的任务")
                 else:
                     QMessageBox.critical(self, "错误", f"查询任务失败:\n{task_list}")
                     logger.error(f"查询任务失败: {task_list}")
@@ -335,8 +336,8 @@ class MainWindow(QMainWindow):
                         # 更新网络状态记录
                         self._last_network_status = False
                         # 检查保活按钮是否开启，如果开启则尝试登录,检查当前时间是否在00:00-7:00之间
-                        if self.ui.pushButton_keeplogin.isChecked() :
-                        # and (current_time.hour() <= 24 and current_time.hour() > 7):
+                        # if self.ui.pushButton_keeplogin.isChecked() :
+                        if self.ui.pushButton_keeplogin.isChecked() and (current_time.hour() <= 24 and current_time.hour() > 7):
                             # 在后台线程执行登录尝试
                             networkmanager.login()
         except Exception as e:
@@ -444,52 +445,48 @@ class MainWindow(QMainWindow):
     def create_exe(self):
         """
         生成自动登录的 EXE 文件。
+        通过复制预先生成的AutoLoginScript.exe文件到任务文件夹
         """
-        username = self.ui.lineEdit_username.text().strip()
-        password = self.ui.lineEdit_password.text().strip()
-
-        # 输入验证
-        if not username or not password:
-            QMessageBox.critical(self, "错误", "请输入账号和密码")
-            return False
 
         try:
             # 确保任务文件夹存在
             self.task_manager.task_folder.mkdir(parents=True, exist_ok=True)
 
-            # 生成自动登录脚本，将脚本放在 task_folder 目录下
-            auto_login_script = self._generate_auto_login_script(username, password)
-            auto_login_script_path = self.task_manager.task_folder.joinpath("auto_login.py")
-            with open(auto_login_script_path, "w", encoding="utf-8") as f:
-                f.write(auto_login_script)
-
-            # 确认脚本路径
-            logger.info(f"自动登录脚本路径: {auto_login_script_path}")
-
-            exe_name = f"login{username}"
             logger.info("开始生成EXE文件...")
             self.ui.stackedWidget_message.setCurrentIndex(0)
             self.ui.label_black_message.setText("正在生成EXE文件...")
             self.ui.pushButton_generate.setEnabled(False)
 
-            # 使用 cx_Freeze 生成 EXE 文件
-            # generate_exe_with_cx_freeze(str(auto_login_script_path), exe_name, str(self.task_manager.task_folder))
-
-            self.ui.pushButton_generate.setEnabled(True)
-            self.ui.stackedWidget_message.setCurrentIndex(1)
-            self.ui.label_green_message.setText("EXE文件生成成功")
-
-            # 构建 EXE 文件的完整路径
-            exe_path = self.task_manager.task_folder.joinpath(f"{exe_name}.exe")
+            # 定义源EXE文件路径（AutoLoginScript.exe）
+            # 使用相对路径或打包时包含的资源路径
+            # 首先尝试从当前可执行文件所在目录查找
+            if getattr(sys, 'frozen', False):
+                # 如果是打包后的exe文件
+                current_dir = os.path.dirname(sys.executable)
+                source_exe_path = os.path.join(current_dir, "AutoLoginScript.exe")
+            else:
+                # 如果是开发环境
+                project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                source_exe_path = os.path.join(project_root, "dist", "AutoLoginScript.exe")
+            
+            # 确保源文件存在
+            if not os.path.exists(source_exe_path):
+                raise FileNotFoundError(f"源EXE文件不存在: {source_exe_path}\n请先运行build_auto_login.ps1脚本生成此文件")
+            
+            target_exe_path = self.task_manager.task_folder.joinpath("AutoLoginScript.exe")
+            
+            # 复制文件
+            shutil.copy2(source_exe_path, target_exe_path)
+            logger.info(f"文件生成成功: {target_exe_path}")
 
             # 弹出提示框
             msg_box = QMessageBox(self)
             msg_box.setWindowTitle("生成成功")
-            msg_box.setText(f"EXE 文件已成功生成，保存路径为：\n{exe_path}")
-            logger.info(f"EXE 文件已成功生成，保存路径为：{exe_path}")
+            msg_box.setText(f"EXE 文件已成功生成，保存路径为：\n{target_exe_path}")
+            logger.info(f"EXE 文件已成功生成，保存路径为：{target_exe_path}")
             open_folder_btn = msg_box.addButton(
                 "打开文件目录", QMessageBox.ActionRole)
-            close_btn = msg_box.addButton("关闭", QMessageBox.RejectRole)
+            msg_box.addButton("关闭", QMessageBox.RejectRole)
             msg_box.exec_()
 
             if msg_box.clickedButton() == open_folder_btn:
@@ -501,15 +498,9 @@ class MainWindow(QMainWindow):
                 elif sys.platform.startswith('linux'):
                     subprocess.run(['xdg-open', self.task_manager.task_folder])
 
-            # 自动清理 build 目录和 .spec 文件
-            build_dir = self.task_manager.task_folder / "build"
-            if build_dir.exists():
-                shutil.rmtree(build_dir)
-
-            # 不删除 auto_login.py 脚本
-            auto_login_script_path = self.task_manager.task_folder / "auto_login.py"
-            if auto_login_script_path.exists():
-                auto_login_script_path.unlink()
+            self.ui.stackedWidget_message.setCurrentIndex(1)
+            self.ui.label_green_message.setText("EXE文件生成成功")
+            self.ui.pushButton_generate.setEnabled(True)
 
         except Exception as e:
             logger.critical(f"生成EXE文件失败: {str(e)}, 错误详情: {getattr(e, 'stderr', '')}")
@@ -517,31 +508,6 @@ class MainWindow(QMainWindow):
             self.ui.pushButton_generate.setEnabled(True)
             self.ui.stackedWidget_message.setCurrentIndex(2)
             self.ui.label_red_message.setText("EXE文件生成失败")
-
-    @staticmethod
-    def _generate_exe(script_path, params):
-        """
-        执行 PyInstaller 命令生成 EXE 文件。
-        """
-        try:
-            logger.info(f"执行命令: {' '.join(params)}")
-            result = subprocess.run(
-                params,
-                capture_output=True,
-                text=True,
-                check=True,
-                cwd=script_path.parent
-            )
-            logger.info("EXE文件生成成功")
-            return True
-        except subprocess.CalledProcessError as e:
-            logger.error(
-                f"生成EXE文件失败: {e.stderr}, 命令: {' '.join(params)}")
-            return False
-        except Exception as e:
-            logger.error(
-                f"生成EXE文件时发生未知错误: {str(e)}, 命令: {' '.join(params)}")
-            return False
 
 
 class PasswordDialog(QDialog):
@@ -561,18 +527,18 @@ def run():
     # 创建并显示主窗口
     window = MainWindow()
     window.show()
-    window.setEnabled(False)
-    password_dialog = PasswordDialog(window)
     # # =================================================================
     # 禁用窗口功能，直到密码验证通过
-    while True:
-        if password_dialog.exec() == QDialog.Accepted:
-            if password_dialog.ui.lineEdit_pswdInput.text() == 'pd11040870':
-                window.setEnabled(True)
-                break
-            QMessageBox.warning(window, '密码错误', '密码不正确，请重新输入！')
-        else:
-            sys.exit()
+    # window.setEnabled(False)
+    # password_dialog = PasswordDialog(window)
+    # while True:
+    #     if password_dialog.exec() == QDialog.Accepted:
+    #         if password_dialog.ui.lineEdit_pswdInput.text() == 'pd11040870':
+    #             window.setEnabled(True)
+    #             break
+    #         QMessageBox.warning(window, '密码错误', '密码不正确，请重新输入！')
+    #     else:
+    #         sys.exit()
     # # =================================================================
 
     sys.exit(application.exec())

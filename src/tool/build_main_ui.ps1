@@ -2,8 +2,9 @@
 .SYNOPSIS
     GXSTNU Schoolnet Login Assistant - Main UI Packaging Script
 .DESCRIPTION
-    This script is used to package run.py into a single executable file with GUI interface
-    Double-click this script to run the packaging process
+    This script is used to package run.py into a single executable file with GUI interface.
+    It automatically cleans up cache files after successful packaging and ensures AutoLoginScript.exe is included.
+    Double-click this script to run the packaging process.
 .NOTES
     File Name: build_main_ui.ps1
     Version: 1.0
@@ -11,139 +12,153 @@
     Encoding: UTF-8 with BOM
 #>
 
-# Skip encoding settings to avoid issues
-
 # Set PowerShell execution policy to Bypass (only valid for current session)
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
 
-# 获取项目根目录（从当前脚本位置向上两级，因为脚本在src/tool目录下）
+# Get project root directory (two levels up from current script location, since script is in src/tool directory)
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ProjectRoot = Join-Path -Path $ScriptDir -ChildPath '..\..'
-$ProjectRoot = Resolve-Path $ProjectRoot
-
-# Check if running in virtual environment
-$VenvPath = "$ProjectRoot\.venv"
-if (-not (Test-Path -Path $VenvPath)) {
-    Write-Host "Warning: It is recommended to run this packaging script in a virtual environment." -ForegroundColor Yellow
-}
-
-# Check if pyinstaller is installed
-try {
-    Get-Command -Name 'pyinstaller' -ErrorAction Stop | Out-Null
-} catch {
-    Write-Host "Error: pyinstaller executable not found, please install pyinstaller first." -ForegroundColor Red
-    Write-Host "Please run: uv pip install pyinstaller" -ForegroundColor Yellow
-    Read-Host "Press Enter to exit..."
-    exit 1
-}
-
-# 定义打包参数
+$ProjectRoot = Join-Path -Path $ScriptDir -ChildPath '..\..' -Resolve
+$ProjectName = "GXSTNU-Schoolnet-Login-Assistant"
 $SourceScript = "$ProjectRoot\run.py"
 $DistDir = "$ProjectRoot\dist"
 $BuildDir = "$ProjectRoot\build"
-$SpecFile = "$ProjectRoot\GXSTNU_Schoolnet_Login.spec"
-# 使用绝对路径引用图标文件，避免路径解析问题
-$IconFile = Join-Path -Path $ProjectRoot -ChildPath "assets\images\main_icon.ico"
-
-# 定义AutoLoginScript.exe路径
-$AutoLoginScriptExe = Join-Path -Path $DistDir -ChildPath "AutoLoginScript.exe"
-
-# 确保输出目录存在
-if (-not (Test-Path -Path $DistDir)) {
-    New-Item -Path $DistDir -ItemType Directory -Force | Out-Null
+$SpecFile = "$ProjectRoot\$ProjectName.spec"
+$IconFile = "$ProjectRoot\assets\images\main_icon.ico"
+$AutoLoginScriptExe = "$DistDir\AutoLoginScript.exe"
+$GenereLoginScript = "$ProjectRoot\src\tool\build_auto_login.ps1"
+# Function to clean up cache files
+function Remove-CacheFiles {
+    param()
+    
+    Write-Host "`nCleaning up cache files..." -ForegroundColor Green
+    
+    Remove-Item -Path $BuildDir -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item -Path $SpecFile -Force -ErrorAction SilentlyContinue
+    
+    Write-Host "Cache files cleaned up successfully." -ForegroundColor Green
 }
 
-# 检查并确保AutoLoginScript.exe存在
-if (-not (Test-Path -Path $AutoLoginScriptExe)) {
-    Write-Host "AutoLoginScript.exe not found. Generating it first..." -ForegroundColor Yellow
-    $BuildAutoLoginScript = Join-Path -Path $ProjectRoot -ChildPath "src\tool\build_auto_login.ps1"
+# Check prerequisites
+function Test-Prerequisites {
+    param()
     
-    if (Test-Path -Path $BuildAutoLoginScript) {
-        try {
-            # 运行build_auto_login.ps1生成AutoLoginScript.exe
-            Push-Location -Path $ProjectRoot
-            & "$BuildAutoLoginScript"
-            Pop-Location
-            
-            if (-not (Test-Path -Path $AutoLoginScriptExe)) {
-                throw "Failed to generate AutoLoginScript.exe"
+    # Check if running in virtual environment
+    $VenvPath = "$ProjectRoot\.venv"
+    if (-not (Test-Path -Path $VenvPath)) {
+        Write-Host "Warning: It is recommended to run this packaging script in a virtual environment." -ForegroundColor Yellow
+    }
+    
+    # Check if pyinstaller is installed
+    try {
+        Get-Command -Name 'pyinstaller' -ErrorAction Stop | Out-Null
+        return $true
+    } catch {
+        Write-Host "Error: pyinstaller executable not found, please install pyinstaller first." -ForegroundColor Red
+        Write-Host "Please run: uv pip install pyinstaller" -ForegroundColor Yellow
+        return $false
+    }
+}
+
+# Generate AutoLoginScript.exe if not exists
+function Generate-AutoLoginScript {
+    param()
+    
+    # Check and ensure AutoLoginScript.exe exists
+    if (-not (Test-Path -Path $AutoLoginScriptExe)) {
+        Write-Host "AutoLoginScript.exe not found. Generating it first..." -ForegroundColor Yellow
+        
+        if (Test-Path -Path $GenereLoginScript) {
+            try {
+                # Run build_auto_login.ps1 to generate AutoLoginScript.exe
+                Push-Location -Path $ProjectRoot
+                & "$GenereLoginScript"
+                Pop-Location
+                
+                if (Test-Path -Path $AutoLoginScriptExe) {
+                    Write-Host "AutoLoginScript.exe generated successfully." -ForegroundColor Green
+                    return $true
+                } else {
+                    Write-Host "Failed to generate AutoLoginScript.exe" -ForegroundColor Red
+                    return $false
+                }
+            } catch {
+                Write-Host "Error: Failed to generate AutoLoginScript.exe: $_" -ForegroundColor Red
+                return $false
             }
-        } catch {
-            Write-Host "Error: Failed to generate AutoLoginScript.exe: $_" -ForegroundColor Red
-            Read-Host "Press Enter to exit..."
-            exit 1
+        } else {
+            Write-Host "Error: build_auto_login.ps1 script not found." -ForegroundColor Red
+            return $false
         }
     } else {
-        Write-Host "Error: build_auto_login.ps1 script not found." -ForegroundColor Red
-        Read-Host "Press Enter to exit..."
-        exit 1
+        Write-Host "AutoLoginScript.exe already exists, skipping generation." -ForegroundColor Green
+        return $true
     }
 }
 
-# 构建PyInstaller命令，包含AutoLoginScript.exe作为外部资源
-$PyInstallerArgs = @(
-    '--onefile',             # 生成单个可执行文件
-    '--windowed',            # 不显示控制台窗口（GUI应用）
-    '--name=GXSTNU_Schoolnet_Login', # 可执行文件名称
-    "--icon=$IconFile",     # 设置应用图标，使用引号包裹整个参数
-    "--distpath=$DistDir",
-    "--clean",              # Clean PyInstaller cache and remove temporary files before building.
-    # 使用--add-data参数将AutoLoginScript.exe作为外部资源包含
-    "--add-data=$AutoLoginScriptExe;.\",
-    # 添加隐藏的导入以确保所有依赖都被包含
-    '--hidden-import=src.core.NetworkManager',
-    '--hidden-import=src.utils.logger',
-    '--hidden-import=src.core.TaskScheduler',
-    '--hidden-import=src.core.Credentials',
-    '--hidden-import=src.gui.main_gui_program',
-    '--hidden-import=src.gui.main_ui',
-    '--hidden-import=PySide6',
-    '--hidden-import=PySide6.QtCore',
-    '--hidden-import=PySide6.QtWidgets',
-    '--hidden-import=requests',
-    '--hidden-import=Crypto',
-    '--hidden-import=loguru',
-    "$SourceScript"
-)
-
-Write-Host "Packaging Main UI with PyInstaller..." -ForegroundColor Green
-Write-Host "Command: pyinstaller $($PyInstallerArgs -join ' ')" -ForegroundColor Yellow
-
-# 执行PyInstaller命令
-try {
-    # 切换到项目根目录执行命令
-    Push-Location -Path $ProjectRoot
-    pyinstaller $PyInstallerArgs
-    Pop-Location
+# Main packaging function
+function Invoke-Packaging {
+    param()
     
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "`nPackaging successful! Executable file generated at: $DistDir\GXSTNU_Schoolnet_Login.exe" -ForegroundColor Green
-        Write-Host "Note: This is the main GUI application of GXSTNU Schoolnet Login Assistant." -ForegroundColor Cyan
+    # Build PyInstaller command, including AutoLoginScript.exe as external resource
+    $PyInstallerArgs = @(
+        '--onefile',             # Generate single executable file
+        '--windowed',            # Don't show console window (GUI application)
+        '--log-level=WARN'
+        "--name=$ProjectName", # Executable file name
+        "--icon=$IconFile",     # Set application icon
+        "--distpath=$DistDir",
+        # Use --add-data parameter to include AutoLoginScript.exe as external resource
+        "--add-data=$AutoLoginScriptExe;.\",
+        # Add hidden imports to ensure all dependencies are included
+        '--hidden-import=src.core.NetworkManager',
+        '--hidden-import=src.utils.logger',
+        '--hidden-import=src.core.TaskScheduler',
+        '--hidden-import=src.core.Credentials',
+        '--hidden-import=src.gui.main_gui_program',
+        '--hidden-import=src.gui.main_ui',
+        '--hidden-import=src.gui.window_rc',
+        '--hidden-import=PySide6',
+        '--hidden-import=PySide6.QtCore',
+        '--hidden-import=PySide6.QtWidgets',
+        '--hidden-import=requests',
+        '--hidden-import=Crypto',
+        '--hidden-import=loguru',
+        "$SourceScript"
+    )
+    
+    Write-Host "Packaging $SourceScript with PyInstaller..." -ForegroundColor Green
+    Write-Host "Command: `npyinstaller $($PyInstallerArgs -join ' ')" -ForegroundColor Yellow
+    
+    try {
+        # Change to project root directory to execute command
+        Push-Location -Path $ProjectRoot
+        Write-Host "`nPackaging process started..." -ForegroundColor Green
+        pyinstaller $PyInstallerArgs
+        Pop-Location
         
-        # Clean up temporary files
-        Write-Host "`nCleaning up temporary files..." -ForegroundColor Green
-        
-        # Delete build directory
-        if (Test-Path -Path $BuildDir -PathType Container) {
-            Write-Host "Deleting build directory: $BuildDir" -ForegroundColor Yellow
-            Remove-Item -Path $BuildDir -Recurse -Force
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "`nPackaging successful! Executable file generated at: $DistDir\$ProjectName.exe" -ForegroundColor Green
+            return $true
+        } else {
+            Write-Host "`nPackaging failed with exit code: $LASTEXITCODE" -ForegroundColor Red
+            return $false
         }
-        
-        # Delete spec file
-        if (Test-Path -Path $SpecFile -PathType Leaf) {
-            Write-Host "Deleting spec file: $SpecFile" -ForegroundColor Yellow
-            Remove-Item -Path $SpecFile -Force
-        }
-        
-        Write-Host "Temporary files cleaned up." -ForegroundColor Green
-    } else {
-        throw "PyInstaller execution failed, exit code: $LASTEXITCODE"
+    } catch {
+        Write-Host "Error: Problem occurred during packaging: $_" -ForegroundColor Red
+        return $false
     }
-} catch {
-    Write-Host "Error: Problem occurred during packaging: $_" -ForegroundColor Red
-    Read-Host "Press Enter to exit..."
-    exit 1
 }
 
-# Prompt user that packaging is complete
-Read-Host "Packaging process completed, press Enter to exit..."
+# Main script execution
+if (Test-Prerequisites) {
+    $autoLoginGenerated = Generate-AutoLoginScript
+    
+    if ($autoLoginGenerated) {
+        $packagingSuccess = Invoke-Packaging
+        
+        # Clean cache files if packaging was successful
+        if ($packagingSuccess) {
+            Remove-CacheFiles
+        }
+    }
+}

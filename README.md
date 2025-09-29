@@ -44,7 +44,7 @@
 2. 克隆项目到本地：
    ```powershell
    cd F:\code\py
-   git clone [项目仓库地址]
+   git clone https://gitee.com/quanmianup/GXSTNU-Schoolnet-Login-Assistant.git
    cd schoolnet
    ```
 
@@ -59,12 +59,7 @@
    uv pip install -r requirements.txt
    ```
 
-5. 运行初始化脚本生成配置文件：
-   ```powershell
-   python -m config.init_key
-   ```
-
-6. 首次运行时，程序会提示您输入校园网账号和密码，这些信息将被加密存储
+5. 首次运行时，程序会提示您输入校园网账号和密码，这些信息将被加密存储
 
 ### 运行方式
 
@@ -87,7 +82,7 @@ python run.py
 1. 输入账号密码
 2. 点击"生成自动登录EXE"按钮
 3. 等待程序完成打包过程
-4. 生成的EXE文件将保存在`task_folder`目录下
+4. 生成的EXE文件将保存在`C:\ScheduledTasks`目录下
 
 ### 计划任务管理
 
@@ -101,29 +96,61 @@ python run.py
 schoolnet/
 ├── src/                 # 源代码目录
 │   ├── core/            # 核心功能模块
-│   │   ├── network.py   # 网络连接和认证管理
-│   │   └── AsyncTaskExecutor.py  # 异步任务执行器
+│   │   ├── AsyncTaskExecutor.py  # 异步任务执行器
+│   │   ├── AutoLoginScript.py    # 自动登录脚本
+│   │   ├── Credentials.py        # 凭证管理
+│   │   ├── NetworkManager.py     # 网络连接和认证管理
+│   │   ├── TaskScheduler.py      # 任务调度器
+│   │   └── __init__.py
 │   ├── gui/             # 图形界面模块
-│   │   ├── main_gui_program.py  # 主界面程序
-│   │   └── main_ui.py   # UI界面定义
-│   ├── utils/           # 工具函数
-│   │   ├── logger.py    # 日志配置
-│   │   └── task_manager.py  # 任务管理
-│   └── tool/            # 开发工具脚本
-├── config/              # 配置文件
-│   ├── credentials.py   # 凭证管理
-│   └── init_key.py      # 密钥初始化
+│   │   ├── PswdInput_ui.py       # 密码输入UI
+│   │   ├── __init__.py
+│   │   ├── main_gui_program.py   # 主界面程序
+│   │   ├── main_ui.py            # UI界面定义
+│   │   └── window_rc.py          # 窗口资源
+│   ├── tool/            # 开发工具脚本
+│   │   ├── README_PYSIDE_TOOLS.md   # PySide工具说明
+│   │   ├── build_auto_login.ps1     # 构建自动登录脚本
+│   │   ├── build_auto_login.py      # 构建自动登录Python脚本
+│   │   ├── build_main_ui.ps1        # 构建主界面脚本
+│   │   ├── build_main_ui.py         # 构建主界面Python脚本
+│   │   ├── run_designer.ps1         # 运行Qt设计器
+│   │   ├── run_ui_rcc_converter.py  # UI和RCC转换器
+│   │   └── schtasks_params_guide.md # 任务计划参数指南
+│   └── utils/           # 工具函数
+│       ├── __init__.py
+│       └── logger.py    # 日志配置
 ├── assets/              # 资源文件
 │   ├── images/          # 界面图片
+│   │   ├── QC.jpg
+│   │   ├── close.png
+│   │   ├── dislogin.png
+│   │   ├── internet.png
+│   │   ├── login.png
+│   │   ├── main.png
+│   │   ├── main_icon.ico
+│   │   ├── minizing.png
+│   │   ├── network.png
+│   │   ├── 关.png
+│   │   └── 开关.png
 │   └── qtfile/          # Qt设计文件
+│       ├── PswdInput.ui
+│       ├── main.ui
+│       └── window.qrc
+├── .gitignore           # Git忽略文件配置
+├── .python-version      # Python版本文件
+├── LICENSE              # 许可证文件
+├── README.md            # 项目说明文档
+├── pyproject.toml       # 项目配置文件
+├── requirements.txt     # 项目依赖列表
 ├── run.py               # 主程序入口
-└── requirements.txt     # 项目依赖列表
+└── uv.lock              # uv锁定文件
 ```
 
 ## 安全注意事项
 
 1. 🔐 账号密码使用AES加密算法存储在本地
-2. 📝 日志文件默认保存在`logs`目录下，文件名包含用户名信息
+2. 📝 日志文件默认保存在`c:\ScheduledTasks\logs`目录下，文件名包含用户名信息
 3. ⚠️ 请勿将包含敏感信息的文件上传到代码仓库
 4. 🔒 项目已配置`.gitignore`文件忽略敏感配置和日志文件
 5. 🛡️ 生成的EXE文件包含加密的账号信息，请妥善保管，不要分享给他人
@@ -143,4 +170,3 @@ schoolnet/
 ## 许可证
 
 本项目采用 [MIT License](LICENSE) 开源协议
-

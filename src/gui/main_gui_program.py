@@ -65,7 +65,9 @@ class MainWindow(QMainWindow):
         """
         self.ui.select_file_btn.clicked.connect(self.select_file)
         self.ui.create_btn.clicked.connect(self.create_task)
-        self.ui.query_btn.clicked.connect(self.query_tasks)
+        self.ui.query_btn.clicked.connect(
+            lambda: (self.query_tasks(), 
+            QMessageBox.information(self, "提示", "查询任务成功")))
         self.ui.delete_btn.clicked.connect(self.delete_task)
         self.ui.pushButton_generate.clicked.connect(self.create_exe)
         self.ui.task_table.setColumnCount(4)
@@ -275,7 +277,6 @@ class MainWindow(QMainWindow):
                     if not task_list:
                         QMessageBox.information(
                             self, "提示", "没有查询到匹配的任务")
-                        return
                     # 更新任务列表
                     try:
                         self.ui.task_table.setRowCount(0)
@@ -293,7 +294,7 @@ class MainWindow(QMainWindow):
                                 item.setToolTip(task[key])
                                 self.ui.task_table.setItem(row, col, item)
                         self.ui.task_table.resizeColumnsToContents()
-                        QMessageBox.information(self, "提示", "查询任务成功")
+                        
                     except Exception as e:
                         QMessageBox.critical(
                             self, "错误", f"更新任务列表失败:\n{str(e)}")
@@ -387,7 +388,10 @@ class MainWindow(QMainWindow):
         选择要执行的文件。
         """
         file_path, _ = QFileDialog.getOpenFileName(
-            self, "选择要执行的文件", "", "所有文件 (*.*)"
+            parent=self, 
+            caption="选择要执行的文件", 
+            dir=str(self.task_manager.task_folder), 
+            filter="所有文件 (*.*)"
         )
 
         if file_path:
@@ -419,7 +423,7 @@ class MainWindow(QMainWindow):
             func=lambda: self.task_manager.query_tasks(), 
             op_type="query_tasks"
         )
-
+        
     def delete_task(self):
         """
         异步删除计划任务。
@@ -529,16 +533,19 @@ def run():
     window.show()
     # # =================================================================
     # 禁用窗口功能，直到密码验证通过
-    # window.setEnabled(False)
-    # password_dialog = PasswordDialog(window)
-    # while True:
-    #     if password_dialog.exec() == QDialog.Accepted:
-    #         if password_dialog.ui.lineEdit_pswdInput.text() == 'pd11040870':
-    #             window.setEnabled(True)
-    #             break
-    #         QMessageBox.warning(window, '密码错误', '密码不正确，请重新输入！')
-    #     else:
-    #         sys.exit()
+
+    if credentials.get('MAIN_LOCK'):
+        window.setEnabled(False)
+        password_dialog = PasswordDialog(window)
+        while True:
+            if password_dialog.exec() == QDialog.Accepted:
+                if password_dialog.ui.lineEdit_pswdInput.text() == 'pd11040870':
+                    window.setEnabled(True)
+                    credentials.set('MAIN_LOCK', False)
+                    break
+                QMessageBox.warning(window, '密码错误', '密码不正确，请重新输入！')
+            else:
+                sys.exit()
     # # =================================================================
 
     sys.exit(application.exec())

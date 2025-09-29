@@ -188,7 +188,7 @@ class CredentialManager:
 
         参数:
             key (str): 凭证键名
-            value (str): 待存储的凭证值
+            value (Any): 待存储的凭证值
         """
         key_upper = key.upper()
         if key_upper == 'PASSWORD':
@@ -261,6 +261,7 @@ class CredentialManager:
 6. MAX_RETRY: 网络请求最大重试次数
 7. RETRY_INTERVAL: 重试间隔时间(秒)
 8. TEST_URL: 网络连通性测试URL
+9. MAIN_LOCK: 主界面是否锁定
 """
 CREDENTIALS = {
     # 加密后的密钥（Base64 编码）
@@ -274,6 +275,7 @@ CREDENTIALS = {
     'MAX_RETRY': 4,
     'RETRY_INTERVAL': 1.5,
     'TEST_URL': 'http://www.bilibili.com',
+    'MAIN_LOCK': True,
 }
 
         '''

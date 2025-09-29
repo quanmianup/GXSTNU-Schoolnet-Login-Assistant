@@ -7,6 +7,12 @@ from pathlib import Path
 from src.utils.logger import logger
 from PySide6.QtCore import QTime
 
+if os.name == 'nt':
+    try:
+        CREATE_NO_WINDOW = 0x08000000
+    except ImportError:
+        CREATE_NO_WINDOW = 0
+
 class TaskScheduler:
     """
     任务计划管理类，封装计划任务的创建、查询和删除操作。
@@ -38,10 +44,15 @@ class TaskScheduler:
                 "/F"
             ]
 
-            subprocess.run(cmd, capture_output=True, text=True, check=True)
+            # 添加creationflags参数来隐藏控制台窗口，不使用text=True避免编码问题
+            subprocess.run(cmd, capture_output=True, check=True, 
+                          creationflags=CREATE_NO_WINDOW if os.name == 'nt' else 0)
             return True, file_name
+        except subprocess.CalledProcessError as e:
+            err_msg = e.stderr.decode('cp936', errors='replace') if e.stderr else str(e)
+            return False, err_msg
         except Exception as e:
-            err_msg = e.stderr if isinstance(e, subprocess.CalledProcessError) else str(e)
+            err_msg = str(e)
             return False, err_msg
 
     def query_tasks(self):
@@ -49,66 +60,72 @@ class TaskScheduler:
         查询任务计划。
         """
         try:
-            list_cmd = ["schtasks", "/Query", "/FO", "LIST"]
-            filter_cmd = ["findstr", f"^{self.task_prefix}"]
-            # 在 Windows 系统下使用 shell 来执行管道命令
-            full_cmd = " ".join(
-                map(lambda x: f'"{x}"' if " " in x else x, list_cmd)) + " | " + " ".join(
-                map(lambda x: f'"{x}"' if " " in x else x, filter_cmd))
-
+            list_cmd = ["schtasks", "/Query", "/FO", "LIST", "/V"]
+            
+            # 在Windows系统上使用系统默认编码（通常是CP936或GBK）而不是强制使用UTF-8
+            # 添加creationflags参数来隐藏控制台窗口
             task_names_list_result = subprocess.run(
-                full_cmd, capture_output=True, text=True, shell=True, encoding='utf8')
+                list_cmd, capture_output=True, shell=False, 
+                creationflags=CREATE_NO_WINDOW if os.name == 'nt' else 0
+            )
 
-            if not task_names_list_result.stdout.strip():
+            # 解码输出，使用系统默认编码
+            stdout = task_names_list_result.stdout.decode('cp936', errors='replace')
+
+            if not stdout.strip():
                 return True, []
 
-            task_names = self._parse_task_names(task_names_list_result.stdout)
-            tasks = self._get_task_details(task_names)
+            tasks = self._get_task_details(stdout)
             return True, tasks
+        except subprocess.CalledProcessError as e:
+            err_msg = e.stderr.decode('cp936', errors='replace') if e.stderr else str(e)
+            return False, err_msg
         except Exception as e:
-            err_msg = e.stderr if isinstance(e, subprocess.CalledProcessError) else str(e)
+            err_msg = str(e)
             return False, err_msg
 
-    @staticmethod
-    def _parse_task_names(output):
-        """
-        解析任务名称。
-        """
-        task_names = []
-        for line in output.strip().split('\n'):
-            if line.startswith(("任务名:", "TaskName:")):
-                task_name = line.split(":", maxsplit = 1)[1].strip().lstrip('\\')
-                task_names.append(task_name)
-        return task_names
 
-    def _get_task_details(self, task_names):
+    def _get_task_details(self, task_text: str):
         """
         获取任务详细信息。
         """
-        tasks = []
-        for task_name in task_names:
-            detail_cmd = ["schtasks", "/Query", "/TN", task_name, "/V", "/FO", "LIST"]
-            detail_result = subprocess.run(
-                detail_cmd, capture_output=True, text=True, shell=True, encoding='utf8')
-            stdout_content = detail_result.stdout
-            if detail_result.stdout is None:
-                return tasks
-            next_run = status = filepath = "N/A"
-            for detail_line in stdout_content.strip().split('\n'):
-                if detail_line.startswith(("Next Run Time:", "下次运行时间")):
-                    next_run = detail_line.split(":", 1)[1].strip()
-                elif detail_line.startswith(("Status:", "模式")):
-                    status = detail_line.split(":", 1)[1].strip()
-                elif detail_line.startswith(("Actions:", "要运行的任务", "Task To Run:")):
-                    filepath = detail_line.split(":", 1)[1].strip()
 
-            original_name = task_name[len(self.task_prefix):]
-            tasks.append({
-                "name": original_name,
-                "next_run": next_run,
-                "status": status,
-                "filepath": filepath
-            })
+        task_start = False
+        tasks = []
+        current_task = {
+                "name": '',
+                "next_run": '',
+                "status": '',
+                "filepath": ''
+        }
+        for line in task_text.split('\r\n'):
+            line = line.strip()
+            if line.startswith(("TaskName","任务名")):
+                task_name = line.split(":", 1)[1].strip().replace("\\", "")
+                if task_name.startswith(self.task_prefix):
+                    task_start = True
+                    original_name = task_name[len(self.task_prefix):]
+                    current_task["name"] = original_name
+                    continue
+            elif line.startswith(("Next Run Time", "下次运行时间")) and task_start:
+                next_run = line.split(":", 1)[1].strip()
+                current_task["next_run"] = next_run
+                continue
+            elif line.startswith(("Status", "模式")) and task_start:
+                status = line.split(":", 1)[1].strip()
+                current_task["status"] = status
+                continue
+            elif line.startswith(("Task To Run", "要运行的任务")) and task_start:
+                filepath = line.split(":", 1)[1].strip()
+                current_task["filepath"] = filepath
+                tasks.append(current_task)
+                current_task = {
+                    "name": '',
+                    "next_run": '',
+                    "status": '',
+                    "filepath": ''
+                }
+                task_start = False
         return tasks
 
     @staticmethod
@@ -120,12 +137,16 @@ class TaskScheduler:
             cmd = ["schtasks", "/Delete", "/TN", full_task_name, "/F"]
             logger.info(f"执行删除任务命令: {' '.join(cmd)}")  # 记录执行的命令
             result = subprocess.run(
-                cmd, capture_output=True, text=True, check=True)
-            logger.info(f"删除任务命令执行结果: {result.stdout}")  # 记录命令执行结果
+                cmd, capture_output=True, check=True,
+                creationflags=CREATE_NO_WINDOW if os.name == 'nt' else 0
+            )
+            # 手动解码输出
+            stdout = result.stdout.decode('cp936', errors='replace')
+            logger.info(f"删除任务命令执行结果: {stdout}")  # 记录命令执行结果
             return True, "任务已删除！"
         except subprocess.CalledProcessError as e:
-            err_msg = f"删除任务失败，退出代码 {e.returncode}，错误信息: {e.stderr}"
-            logger.error(err_msg)
+            err_msg = e.stderr.decode('cp936', errors='replace') if e.stderr else str(e)
+            logger.error(f"删除任务失败，退出代码 {e.returncode}，错误信息: {err_msg}")
             return False, err_msg
         except Exception as e:
             err_msg = str(e)

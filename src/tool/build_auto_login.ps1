@@ -2,8 +2,9 @@
 .SYNOPSIS
     GXSTNU Schoolnet Login Assistant - Auto Packaging Script
 .DESCRIPTION
-    This script is used to package AutoLoginScript.py into a single executable file with console output logs
-    Double-click this script to run the packaging process
+    This script is used to package AutoLoginScript.py into a single executable file with console output logs.
+    It automatically cleans up cache files after successful packaging.
+    Double-click this script to run the packaging process.
 .NOTES
     File Name: build_auto_login.ps1
     Version: 1.0
@@ -11,82 +12,104 @@
     Encoding: UTF-8 with BOM
 #>
 
-# Skip encoding settings to avoid issues
-
 # Set PowerShell execution policy to Bypass (only valid for current session)
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
 
-# 获取项目根目录（从当前脚本位置向上两级，因为脚本在src/tool目录下）
+# Get project root directory (two levels up from current script location, since script is in src/tool directory)
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ProjectRoot = Join-Path -Path $ScriptDir -ChildPath '..\..'
-$ProjectRoot = Resolve-Path $ProjectRoot
+$ProjectRoot = Join-Path -Path $ScriptDir -ChildPath '..\..' -Resolve
 
-# Check if running in virtual environment
-$VenvPath = "$ProjectRoot\.venv"
-if (-not (Test-Path -Path $VenvPath)) {
-    Write-Host "Warning: It is recommended to run this packaging script in a virtual environment." -ForegroundColor Yellow
-}
-
-# Check if pyinstaller is installed
-try {
-    Get-Command -Name 'pyinstaller' -ErrorAction Stop | Out-Null
-} catch {
-    Write-Host "Error: pyinstaller executable not found, please install pyinstaller first." -ForegroundColor Red
-    Write-Host "Please run: uv pip install pyinstaller" -ForegroundColor Yellow
-    Read-Host "Press Enter to exit..."
-    exit 1
-}
-
-# 定义打包参数
+# Define packaging parameters
 $SourceScript = "$ProjectRoot\src\core\AutoLoginScript.py"
 $DistDir = "$ProjectRoot\dist"
 $BuildDir = "$ProjectRoot\build"
 $SpecFile = "$ProjectRoot\AutoLoginScript.spec"
-# 使用绝对路径引用图标文件，避免路径解析问题
-$IconFile = Join-Path -Path $ProjectRoot -ChildPath "assets\images\main_icon.ico"
+$IconFile = "$ProjectRoot\assets\images\main_icon.ico"
 
-# 确保输出目录存在
-if (-not (Test-Path -Path $DistDir)) {
-    New-Item -Path $DistDir -ItemType Directory -Force | Out-Null
+# Function to clean up cache files
+function Remove-CacheFiles {
+    param()
+    
+    Write-Host "`nCleaning up cache files..." -ForegroundColor Green
+    
+    Remove-Item -Path $BuildDir -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item -Path $SpecFile -Force -ErrorAction SilentlyContinue
+    
+    Write-Host "Cache files cleaned up successfully." -ForegroundColor Green
 }
 
-# 构建PyInstaller命令
-$PyInstallerArgs = @(
-    '--onefile',             # 生成单个可执行文件
-    '--console',             # 显示控制台窗口，用于输出日志
-    '--name=AutoLoginScript', # 可执行文件名称
-    "--icon=$IconFile",     # 设置应用图标，使用引号包裹整个参数
-    "--distpath=$DistDir",
-    "--log-level WARN",
-    "--clean",
-    '--hidden-import=src.core.NetworkManager',
-    '--hidden-import=src.utils.logger',
-    '--hidden-import=requests',
-    '--hidden-import=Crypto',
-    '--hidden-import=loguru',
-    "$SourceScript"
-)
-
-Write-Host "Packaging with PyInstaller..." -ForegroundColor Green
-Write-Host "Command: pyinstaller $($PyInstallerArgs -join ' ')" -ForegroundColor Yellow
-
-# 执行PyInstaller命令
-try {
-    # 切换到项目根目录执行命令
-    Push-Location -Path $ProjectRoot
-    pyinstaller $PyInstallerArgs
-    Pop-Location
+# Check prerequisites
+function Test-Prerequisites {
+    param()
     
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "`nPackaging successful! Executable file generated at: $DistDir" -ForegroundColor Green
-        Write-Host "Note: When running the generated exe file, the console will display log output." -ForegroundColor Cyan
-    } 
-} catch {
-        Write-Host "Error: Problem occurred during packaging: $_" -ForegroundColor Red
-        Read-Host "Press Enter to exit..."
-        exit 1
+    # Check if running in virtual environment
+    $VenvPath = "$ProjectRoot\.venv"
+    if (-not (Test-Path -Path $VenvPath)) {
+        Write-Host "Warning: It is recommended to run this packaging script in a virtual environment." -ForegroundColor Yellow
     }
+    
+    # Check if pyinstaller is installed
+    try {
+        Get-Command -Name 'pyinstaller' -ErrorAction Stop | Out-Null
+        return $true
+    } catch {
+        Write-Host "Error: pyinstaller executable not found, please install pyinstaller first." -ForegroundColor Red
+        Write-Host "Please run: uv pip install pyinstaller" -ForegroundColor Yellow
+        return $false
+    }
+}
 
-# Prompt user that packaging is complete
-Write-Host "Packaging process completed, press Enter to exit..."
-Read-Host 
+# Main packaging function
+function Invoke-Packaging {
+    param()
+    
+    # Build PyInstaller command
+    $PyInstallerArgs = @(
+        '--onefile',         
+        '--console',      
+        '--clean',
+        '--name=AutoLoginScript',
+        "--icon=$IconFile",
+        '--log-level=WARN',
+        '--hidden-import=src.core.NetworkManager',
+        '--hidden-import=src.utils.logger',
+        '--hidden-import=requests',
+        '--hidden-import=Crypto',
+        '--hidden-import=loguru',
+        "$SourceScript"
+    )
+    
+    Write-Host "Packaging $SourceScript with PyInstaller..." -ForegroundColor Green
+    Write-Host "Command:`npyinstaller $($PyInstallerArgs -join ' ')" -ForegroundColor Yellow
+    
+    try {
+        # Change to project root directory to execute command
+        Push-Location -Path $ProjectRoot
+        
+        Write-Host "Packaging Now... " -ForegroundColor Cyan
+        # Use Start-Process for more reliable execution
+        $ProcessInfo = Start-Process -FilePath 'pyinstaller' -ArgumentList $PyInstallerArgs -NoNewWindow -Wait -PassThru
+        Pop-Location
+        
+        if ($ProcessInfo.ExitCode -eq 0) {
+            Write-Host "`nPackaging successful! Generated file: $DistDir\AutoLoginScript.exe" -ForegroundColor Green
+            return $true
+        } else {
+            Write-Host "`nPackaging failed with exit code: $($ProcessInfo.ExitCode)" -ForegroundColor Red
+            return $false
+        }
+    } catch {
+        Write-Host "Error: Problem occurred during packaging: $_" -ForegroundColor Red
+        return $false
+    }
+}
+
+# Main script execution
+if (Test-Prerequisites) {
+    $packagingSuccess = Invoke-Packaging
+    
+    # Clean cache files regardless of packaging success
+    if ($packagingSuccess) {
+        Remove-CacheFiles
+    }
+}

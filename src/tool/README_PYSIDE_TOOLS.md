@@ -8,11 +8,13 @@
 
 ### PowerShell脚本
 - **run_designer.ps1** - 启动Qt Designer设计器
-- **run_uic.ps1** - 将.ui文件转换为Python代码
-- **run_rcc.ps1** - 将.qrc资源文件转换为Python代码
+- **build_auto_login.ps1** - 构建自动登录可执行文件
+- **build_main_ui.ps1** - 构建主界面可执行文件
 
 ### Python脚本
 - **run_ui_rcc_converter.py** - 整合工具，一次性转换所有.ui和.qrc文件
+- **build_auto_login.py** - 构建自动登录可执行文件的Python实现
+- **build_main_ui.py** - 构建主界面可执行文件的Python实现
 
 ## 核心功能
 
@@ -23,7 +25,6 @@
 
 Python脚本特有优势：
 - 跨平台兼容（支持Windows、macOS、Linux）
-- 一个命令完成两种文件类型的转换
 - 统一的转换结果统计和错误处理
 
 ## 使用方法
@@ -35,30 +36,23 @@ Python脚本特有优势：
 
 ### 启动Qt Designer
 ```powershell
-.
-un_designer.ps1
+./run_designer.ps1
 ```
 
-### 转换单个文件类型
-```powershell
-# 转换UI文件
-.
-un_uic.ps1
-# 或指定文件
-.
-un_uic.ps1 "path/to/specific.ui"
-
-# 转换资源文件
-.
-un_rcc.ps1
-# 或指定文件
-.
-un_rcc.ps1 "path/to/specific.qrc"
-```
-
-### 一次性转换所有文件（推荐）
+### 转换UI和资源文件（推荐）
 ```powershell
 python .\run_ui_rcc_converter.py
+```
+
+### 构建可执行文件
+构建主界面可执行文件：
+```powershell
+python .\build_main_ui.py
+```
+
+构建自动登录可执行文件：
+```powershell
+python .\build_auto_login.py
 ```
 
 ## 项目文件结构

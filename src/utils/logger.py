@@ -98,15 +98,20 @@ def setup_logger(username=None, log_widget=None):
     # 完全重置日志系统
     logger.remove()  # 移除所有现有的处理器
     
-    # 添加控制台输出（彩色）
-    logger.add(
-        sink=sys.stdout,
-        level=LOG_LEVEL,
-        colorize=True,
-        format=LOG_FORMAT,
-        backtrace=True,
-        diagnose=True
-    )
+    # 添加控制台输出（彩色）- 仅当stdout可用时
+    try:
+        if sys.stdout is not None:
+            logger.add(
+                sink=sys.stdout,
+                level=LOG_LEVEL,
+                colorize=True,
+                format=LOG_FORMAT,
+                backtrace=True,
+                diagnose=True
+            )
+    except Exception as e:
+        # 在无控制台环境中，控制台输出可能会失败
+        pass
 
     # 添加文件日志输出（带轮转、编码、异步）
     logger.add(

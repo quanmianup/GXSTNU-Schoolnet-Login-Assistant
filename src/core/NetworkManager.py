@@ -1,6 +1,43 @@
-import time
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+校园网网络管理模块
+
+此模块提供校园网连接、登录和登出等功能，采用单例模式实现，确保全局只有一个网络管理器实例。
+主要功能包括：
+- 网络连接状态检查
+- 获取认证相关URL
+- 校园网账号登录（含重试机制）
+- 校园网账号登出（含重试机制）
+
+依赖项：
+- requests: 用于HTTP请求
+- src.utils.logger: 日志记录
+- src.core.Credentials: 凭证管理
+
+使用示例：
+```python
+from src.core.NetworkManager import networkmanager
+
+# 检查网络连接状态
+is_connected = networkmanager.check_network()
+
+# 使用默认账号登录
+login_success = networkmanager.login()
+
+# 使用自定义账号登录
+login_success = networkmanager.login(username="user123", password="pass123")
+
+# 使用默认账号登出
+disconnect_success = networkmanager.dislogin()
+
+# 使用指定账号登出
+disconnect_success = networkmanager.dislogin(username="user123")
+```
+"""
 from urllib.parse import urlparse, parse_qs
 import requests
+import time
 
 from src.utils.logger import logger
 # 导入配置
@@ -11,10 +48,19 @@ class NetworkManager:
     """
     网络管理类，采用单例模式实现，用于管理校园网的网络连接、登录和登出等操作。
     该类从配置文件中读取必要的参数，提供网络状态检查、获取认证链接、登录和登出等功能。
-
+    
+    属性:
+        TEST_URL (str): 用于测试网络连接的URL
+        BASE_URL (str): 校园网认证的基础URL
+        USERNAME (str): 默认登录用户名
+        PASSWORD (str): 默认登录密码
+        MAX_RETRY (int): 操作失败时的最大重试次数
+        AUTH_DOMAIN (str): 认证域名
+        RETRY_INTERVAL (int): 重试间隔时间(秒)
+    
     使用方法：
     1. 获取全局单例：
-        >>> from app.core.network import networkmanager
+        >>> from src.core.NetworkManager import networkmanager
     3. 检查网络状态：
         调用 `check_network` 方法检查网络是否连接且不在认证页面。
         >>> is_connected = networkmanager.check_network()
@@ -22,7 +68,7 @@ class NetworkManager:
         >>>     print("网络已连接且不在认证页")
         >>> else:
         >>>     print("网络未连接或处于认证页")
-
+    
     4. 登录校园网：
         调用 `login` 方法进行登录操作，可传入自定义的用户名和密码，若不传则使用配置文件中的默认值。
         # 使用默认用户名和密码登录
@@ -31,30 +77,29 @@ class NetworkManager:
         >>>     print("登录成功")
         >>> else:
         >>>     print("登录失败")
-
+        
         # 使用自定义用户名和密码登录
         >>> custom_login_success = networkmanager.login(username="your_username", password="your_password")
         >>> if custom_login_success:
         >>>     print("自定义账号登录成功")
         >>> else:
         >>>     print("自定义账号登录失败")
-
+    
     5. 登出校园网：
-        调用 `logout` 方法进行登出操作，可传入自定义的用户名，若不传则使用配置文件中的默认值。
+        调用 `dislogin` 方法进行登出操作，可传入自定义的用户名，若不传则使用配置文件中的默认值。
         # 使用默认用户名登出
         >>> logout_success = networkmanager.dislogin()
         >>> if logout_success:
         >>>     print("登出成功")
         >>> else:
         >>>     print("登出失败")
-
+        
         # 使用自定义用户名登出
         >>> custom_logout_success = networkmanager.dislogin(username="your_username")
         >>> if custom_logout_success:
         >>>     print("自定义账号登出成功")
         >>> else:
         >>>     print("自定义账号登出失败")
-
     """
     _instance = None  # 类级别私有变量，用于保存类的唯一实例
 
@@ -62,7 +107,7 @@ class NetworkManager:
         """
         实现单例模式，确保类只有一个实例被创建。
 
-        Returns:
+        返回:
             networkmanager: 类的唯一实例。
         """
         if cls._instance is None:
@@ -82,20 +127,20 @@ class NetworkManager:
         self.AUTH_DOMAIN = credentials.get("AUTH_DOMAIN")
         self.RETRY_INTERVAL = credentials.get("RETRY_INTERVAL")
         
-        # 添加网络状态跟踪变量，用于控制错误日志只在状态变化时显示
-        self._last_network_status = None  # None: 未初始化, True: 网络在线, False: 网络离线
-        
-        # 添加其他状态跟踪变量
-        self._last_auth_params_status = None  # 记录最后一次获取认证参数的状态
-        self._last_empty_credentials_status = None  # 记录最后一次空凭证检查的状态
-        self._last_logout_fail_status = None  # 记录最后一次登出失败的状态
-        self._last_get_auth_urls_status = None  # 记录最后一次获取认证链接的状态
+        # # 添加网络状态跟踪变量，用于控制错误日志只在状态变化时显示
+        # self._last_network_status = None  # None: 未初始化, True: 网络在线, False: 网络离线
+        # 
+        # # 添加其他状态跟踪变量
+        # self._last_auth_params_status = None  # 记录最后一次获取认证参数的状态
+        # self._last_empty_credentials_status = None  # 记录最后一次空凭证检查的状态
+        # self._last_logout_fail_status = None  # 记录最后一次登出失败的状态
+        # self._last_get_auth_urls_status = None  # 记录最后一次获取认证链接的状态
 
     def check_network(self):
         """
         检查网络连接状态，判断网络是否连接成功且不在认证页面。
 
-        Returns:
+        返回:
             bool: 若网络连接成功且不在认证页返回 True，否则返回 False。
         """
         headers = {'User-Agent': 'Mozilla/5.0'}
@@ -107,35 +152,35 @@ class NetworkManager:
             
             # 跟踪网络状态变化，只在状态变化时输出日志
             if not is_connected:
-                if self._last_network_status is not False:
-                    logger.warning("网络未连接或处于认证页面")
-                self._last_network_status = False
+                # if self._last_network_status is not False:
+                logger.warning("网络未连接或处于认证页面")
+                # self._last_network_status = False
                 return False
             return True
         except requests.exceptions.ConnectionError:
             # 只在状态变化时记录错误
-            if self._last_network_status is not False:
-                logger.error('网络连接异常: 无法连接到测试网站')
-            self._last_network_status = False
+            # if self._last_network_status is not False:
+            logger.error('网络连接异常: 无法连接到测试网站')
+            # self._last_network_status = False
             return False
         except requests.exceptions.Timeout:
             # 只在状态变化时记录错误
-            if self._last_network_status is not False:
-                logger.error(f'网络连接超时: 超过{self.RETRY_INTERVAL}秒未收到响应')
-            self._last_network_status = False
+            # if self._last_network_status is not False:
+            logger.error(f'网络连接超时: 超过{self.RETRY_INTERVAL}秒未收到响应')
+            # self._last_network_status = False
             return False
         except Exception as e:
             # 只在状态变化时记录错误
-            if self._last_network_status is not False:
-                logger.error(f'网络检测异常: {str(e)}')
-            self._last_network_status = False
+            # if self._last_network_status is not False:
+            logger.error(f'网络检测异常: {str(e)}')
+            # self._last_network_status = False
             return False
 
     def get_auth_urls(self):
         """
         获取认证相关的 URL，包括登录、登出和检查状态的 URL，其中包含本机的 IP 和 MAC 地址。
 
-        Returns:
+        返回:
             dict or None: 包含 'login'、'disconnect'、'check' 等键的 URL 字典，若获取失败则返回 None。
         """
         try:
@@ -152,47 +197,47 @@ class NetworkManager:
             # 检查必要参数是否获取成功
             if not ip or not mac:
                 # 只在状态变化时记录错误
-                if self._last_auth_params_status is not False:
-                    logger.error("未能从认证页面获取到IP、mac参数")
-                self._last_auth_params_status = False
+                # if self._last_auth_params_status is not False:
+                logger.error("未能从认证页面获取到IP、mac参数")
+                # self._last_auth_params_status = False
                 return None
             # 更新状态为成功
-            self._last_auth_params_status = True
+            # self._last_auth_params_status = True
             
             return {
                 'login': f'https://{self.AUTH_DOMAIN}/webauth.do?wlanacip=172.16.1.82&wlanuserip={ip}&mac={mac}',
                 'disconnect': f'https://{self.AUTH_DOMAIN}/webdisconn.do?wlanacip=172.16.1.82&wlanuserip={ip}&mac={mac}',
                 'check': f'https://{self.AUTH_DOMAIN}/getAuthResult.do',
-            }
+            } 
         except requests.exceptions.Timeout:
             # 只在状态变化时记录错误
-            if self._last_get_auth_urls_status != "timeout":
-                logger.error("获取认证链接超时，请确认网络已连接切处于校园网环境下")
-            self._last_get_auth_urls_status = "timeout"
+            # if self._last_get_auth_urls_status != "timeout":
+            logger.error("获取认证链接超时，请确认网络已连接切处于校园网环境下")
+            # self._last_get_auth_urls_status = "timeout"
             return None
         except requests.exceptions.ConnectionError:
             # 只在状态变化时记录错误
-            if self._last_get_auth_urls_status != "connection_error":
-                logger.error("获取认证链接连接失败，请确认当前处于校园网环境下")
-            self._last_get_auth_urls_status = "connection_error"
+            # if self._last_get_auth_urls_status != "connection_error":
+            logger.error("获取认证链接连接失败，请确认当前处于校园网环境下")
+            # self._last_get_auth_urls_status = "connection_error"
             return None
         except Exception as e:
             # 只在状态变化时记录错误
             error_msg = f"获取认证链接异常: {str(e)}"
-            if self._last_get_auth_urls_status != error_msg:
-                logger.error(error_msg)
-            self._last_get_auth_urls_status = error_msg
+            # if self._last_get_auth_urls_status != error_msg:
+            logger.error(error_msg)
+            # self._last_get_auth_urls_status = error_msg
             return None
 
     def get_data(self, username=None, password=None):
         """
         获取登录、登出和检查状态请求的数据体。
 
-        Args:
+        参数:
             username (str, optional): 登录用户名，默认为配置文件中的用户名。
             password (str, optional): 登录密码，默认为配置文件中的密码。
 
-        Returns:
+        返回:
             dict: 包含 'check'、'login'、'disconnect'、'headers'的数据体字典。
         """
         username = self.USERNAME if username is None else username
@@ -238,11 +283,11 @@ class NetworkManager:
         """
         执行登录操作，支持重试机制。若账号已在线，会先执行下线操作。
 
-        Args:
+        参数:
             username (str, optional): 登录用户名，默认为配置文件中的用户名。
             password (str, optional): 登录密码，默认为配置文件中的密码。
 
-        Returns:
+        返回:
             bool: 登录成功返回 True，登录失败返回 False。
         """
         username = self.USERNAME if username is None else username
@@ -251,12 +296,12 @@ class NetworkManager:
         # 验证用户名和密码
         if not username or not password:
             # 只在状态变化时记录错误
-            if self._last_empty_credentials_status is not False:
-                logger.error("用户名或密码为空！")
-            self._last_empty_credentials_status = False
+            # if self._last_empty_credentials_status is not False:
+            logger.error("用户名或密码为空！")
+            # self._last_empty_credentials_status = False
             return False
         # 更新状态为成功
-        self._last_empty_credentials_status = True
+        # self._last_empty_credentials_status = True
             
         # 获取认证URLs
         auth_urls = self.get_auth_urls()
@@ -315,10 +360,10 @@ class NetworkManager:
         """
         执行登出操作，支持重试机制。
 
-        Args:
+        参数:
             username (str, optional): 登出的用户名，默认为配置文件中的用户名。
 
-        Returns:
+        返回:
             bool: 登出成功返回 True，登出失败返回 False。
         """
         username = self.USERNAME if username is None else username
@@ -326,16 +371,17 @@ class NetworkManager:
         # 验证用户名
         if not username:
             # 只在状态变化时记录错误
-            if self._last_empty_credentials_status is not False:
-                logger.error("用户名为空，登出失败")
-            self._last_empty_credentials_status = False
+            # if self._last_empty_credentials_status is not False:
+            logger.error("用户名为空，登出失败")
+            # self._last_empty_credentials_status = False
             return False
         # 更新状态为成功
-        self._last_empty_credentials_status = True
+        # self._last_empty_credentials_status = True
             
         # 获取认证URLs
         auth_urls = self.get_auth_urls()
         if auth_urls is None:
+            logger.error("获取认证URLs失败，登出失败")
             return False
 
         # 获取登出请求数据体
@@ -364,10 +410,11 @@ class NetworkManager:
         
         # 只在状态变化时记录错误
         error_msg = f"{username}登出失败：请检查账号密码是否正确，或先手动下线已登录的账号"
-        if self._last_logout_fail_status != error_msg:
-            logger.error(error_msg)
-        self._last_logout_fail_status = error_msg
+        # if self._last_logout_fail_status != error_msg:
+        logger.error(error_msg)
+        # self._last_logout_fail_status = error_msg
         return False
 
 
+# 创建NetworkManager的全局单例实例，供其他模块直接导入使用
 networkmanager = NetworkManager()

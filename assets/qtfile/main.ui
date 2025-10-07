@@ -8,7 +8,7 @@
     <x>0</x>
     <y>0</y>
     <width>601</width>
-    <height>524</height>
+    <height>523</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -190,7 +190,7 @@ QPushButton:hover{
            </property>
            <property name="minimumSize">
             <size>
-             <width>101</width>
+             <width>100</width>
              <height>30</height>
             </size>
            </property>
@@ -199,6 +199,28 @@ QPushButton:hover{
            </property>
            <property name="text">
             <string>定时任务管理</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_tab_manege_2">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>50</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="text">
+            <string>其它</string>
            </property>
           </widget>
          </item>
@@ -234,7 +256,7 @@ QPushButton{
 </string>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>2</number>
         </property>
         <widget class="QWidget" name="page_main">
          <widget class="QFrame" name="frame_main_2">
@@ -242,12 +264,12 @@ QPushButton{
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>601</width>
-            <height>431</height>
+            <width>600</width>
+            <height>430</height>
            </rect>
           </property>
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
@@ -1075,8 +1097,8 @@ li.checked::marker { content: &quot;\2612&quot;; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>601</width>
-            <height>431</height>
+            <width>600</width>
+            <height>430</height>
            </rect>
           </property>
           <property name="frameShape">
@@ -1331,6 +1353,318 @@ li.checked::marker { content: &quot;\2612&quot;; }
           </layout>
          </widget>
         </widget>
+        <widget class="QWidget" name="page_other">
+         <widget class="QFrame" name="frame_3">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>600</width>
+            <height>430</height>
+           </rect>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::Shape::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Shadow::Raised</enum>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="5,1">
+           <property name="leftMargin">
+            <number>3</number>
+           </property>
+           <property name="topMargin">
+            <number>3</number>
+           </property>
+           <property name="rightMargin">
+            <number>3</number>
+           </property>
+           <property name="bottomMargin">
+            <number>3</number>
+           </property>
+           <item>
+            <widget class="QFrame" name="frame_4">
+             <property name="frameShape">
+              <enum>QFrame::Shape::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Raised</enum>
+             </property>
+             <widget class="QStackedWidget" name="stackedWidget">
+              <property name="geometry">
+               <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>481</width>
+                <height>420</height>
+               </rect>
+              </property>
+              <property name="currentIndex">
+               <number>0</number>
+              </property>
+              <widget class="QWidget" name="page_help">
+               <widget class="QFrame" name="frame_help">
+                <property name="geometry">
+                 <rect>
+                  <x>0</x>
+                  <y>0</y>
+                  <width>480</width>
+                  <height>410</height>
+                 </rect>
+                </property>
+                <property name="frameShape">
+                 <enum>QFrame::Shape::NoFrame</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Shadow::Raised</enum>
+                </property>
+                <property name="lineWidth">
+                 <number>0</number>
+                </property>
+                <widget class="QTextBrowser" name="textBrowser_help">
+                 <property name="geometry">
+                  <rect>
+                   <x>10</x>
+                   <y>0</y>
+                   <width>469</width>
+                   <height>400</height>
+                  </rect>
+                 </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="frameShape">
+                  <enum>QFrame::Shape::NoFrame</enum>
+                 </property>
+                 <property name="autoFormatting">
+                  <set>QTextEdit::AutoFormattingFlag::AutoAll</set>
+                 </property>
+                 <property name="markdown">
+                  <string notr="true">1.首页操作
+
+1.1.登录/下线功能
+
+单击首页标签，在输入框输入账号密码，点击“登录”/“下线”按钮**连接/下线**校园网；勾选“记住密码”可在下次打开程序时，自动输入账号信息。
+
+1.2.生成一键登录文件
+
+点击“生成一键登录文件”按钮可以在***C:\\ScheduledTasks***文件夹下生成***AutoLoginScript.exe***
+文件，双击这个文件可以自动登录校园网（要求只在登录在）。
+
+点击&quot;保持在线&quot;按钮，系统会每5秒自动检测并保持网络连接。
+
+日志查看
+
+右侧日志区域显示操作记录，右键点击可清空日志。
+
+生成独立EXE
+
+输入账号密码后，点击&quot;生成自动登录EXE&quot;按钮，文件将保存在C:ScheduledTasks目录。
+
+计划任务
+
+切换到&quot;任务管理&quot;标签页，可创建、查询和删除定时自动登录任务。
+
+常见问题
+
+\- 登录失败：检查账号密码和网络连接，查看日志获取错误原因
+
+\- 修改账号：取消勾选&quot;记住密码&quot;并登录，或直接输入新账号密码
+
+\- 任务不执行：确认EXE文件路径正确，检查Windows任务计划程序设置
+
+注意事项
+
+\- 账号密码使用AES加密存储
+
+\- 生成的EXE文件包含账号信息，请妥善保管
+
+\- 日志保存在c:ScheduledTaskslogs目录
+
+</string>
+                 </property>
+                 <property name="html">
+                  <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: &quot;\2610&quot;; }
+li.checked::marker { content: &quot;\2612&quot;; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'微软雅黑'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;1.首页操作&lt;/p&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;1.1.登录/下线功能&lt;/p&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;单击首页标签，在输入框输入账号密码，点击“登录”/“下线”按钮&lt;span style=&quot; font-weight:700;&quot;&gt;连接/下线&lt;/span&gt;校园网；勾选“记住密码”可在下次打开程序时，自动输入账号信息。&lt;/p&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;1.2.生成一键登录文件&lt;/p&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;点击“生成一键登录文件”按钮可以在&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;C:\ScheduledTasks&lt;/span&gt;文件夹下生成&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;AutoLoginScript.exe&lt;/span&gt;文件，双击这个文件可以自动登录校园网（要求只在登录在）。&lt;/p&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;点击&amp;quot;保持在线&amp;quot;按钮，系统会每5秒自动检测并保持网络连接。&lt;/p&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;日志查看&lt;/p&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;右侧日志区域显示操作记录，右键点击可清空日志。&lt;/p&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;生成独立EXE&lt;/p&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;输入账号密码后，点击&amp;quot;生成自动登录EXE&amp;quot;按钮，文件将保存在C:ScheduledTasks目录。&lt;/p&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;计划任务&lt;/p&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;切换到&amp;quot;任务管理&amp;quot;标签页，可创建、查询和删除定时自动登录任务。&lt;/p&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;常见问题&lt;/p&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- 登录失败：检查账号密码和网络连接，查看日志获取错误原因&lt;/p&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- 修改账号：取消勾选&amp;quot;记住密码&amp;quot;并登录，或直接输入新账号密码&lt;/p&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- 任务不执行：确认EXE文件路径正确，检查Windows任务计划程序设置&lt;/p&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;注意事项&lt;/p&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- 账号密码使用AES加密存储&lt;/p&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- 生成的EXE文件包含账号信息，请妥善保管&lt;/p&gt;
+&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- 日志保存在c:ScheduledTaskslogs目录&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                </widget>
+               </widget>
+              </widget>
+              <widget class="QWidget" name="page_update"/>
+              <widget class="QWidget" name="page_disclaimer"/>
+              <widget class="QWidget" name="page_about"/>
+             </widget>
+            </widget>
+           </item>
+           <item>
+            <widget class="QFrame" name="frame_other_btnbox">
+             <property name="minimumSize">
+              <size>
+               <width>100</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::Shape::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Raised</enum>
+             </property>
+             <property name="lineWidth">
+              <number>0</number>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_4">
+              <property name="spacing">
+               <number>17</number>
+              </property>
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <spacer name="verticalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pushButton_help">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>25</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>使用帮助</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pushButton_update">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>25</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>检查更新</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pushButton_disclaimer">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>25</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>免责声明</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pushButton_aboutAuthor">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>25</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>关于</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="verticalSpacer_2">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
        </widget>
       </item>
      </layout>
@@ -1402,6 +1736,9 @@ li.checked::marker { content: &quot;\2612&quot;; }
       </property>
       <item>
        <widget class="QPushButton" name="pushButtom_title">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -1419,6 +1756,18 @@ li.checked::marker { content: &quot;\2612&quot;; }
           <width>16777215</width>
           <height>25</height>
          </size>
+        </property>
+        <property name="mouseTracking">
+         <bool>true</bool>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::FocusPolicy::NoFocus</enum>
+        </property>
+        <property name="contextMenuPolicy">
+         <enum>Qt::ContextMenuPolicy::NoContextMenu</enum>
+        </property>
+        <property name="acceptDrops">
+         <bool>true</bool>
         </property>
         <property name="styleSheet">
          <string notr="true">margin-left: 10px;</string>
@@ -1576,17 +1925,18 @@ li.checked::marker { content: &quot;\2612&quot;; }
   <tabstop>pushButton_keeplogin</tabstop>
   <tabstop>pushButton_tab_main</tabstop>
   <tabstop>pushButton_tab_manege</tabstop>
-  <tabstop>pushButtom_title</tabstop>
+  <tabstop>pushButton_tab_manege_2</tabstop>
   <tabstop>pushButton_minizing</tabstop>
   <tabstop>pushButton_close</tabstop>
-  <tabstop>textBrowser_log</tabstop>
+  <tabstop>time_edit</tabstop>
+  <tabstop>file_path_edit</tabstop>
+  <tabstop>select_file_btn</tabstop>
   <tabstop>create_btn</tabstop>
   <tabstop>delete_btn</tabstop>
   <tabstop>query_btn</tabstop>
+  <tabstop>textBrowser_log</tabstop>
   <tabstop>task_table</tabstop>
-  <tabstop>select_file_btn</tabstop>
-  <tabstop>time_edit</tabstop>
-  <tabstop>file_path_edit</tabstop>
+  <tabstop>pushButtom_title</tabstop>
  </tabstops>
  <resources>
   <include location="window.qrc"/>

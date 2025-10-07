@@ -1,5 +1,28 @@
 """
 主界面程序，负责创建和管理 GUI 界面。
+
+此模块实现了校园网登录助手的主界面，提供了以下功能：
+- 用户登录和下线操作
+- 网络状态实时监控
+- 计划任务管理（创建、查询、删除）
+- 生成一键登录可执行文件
+- 密码保护功能
+
+依赖项:
+- PySide6: 用于构建GUI界面
+- AsyncTaskExecutor: 处理异步任务
+- NetworkManager: 管理网络连接
+- TaskScheduler: 管理Windows计划任务
+- Credentials: 处理凭证存储
+- logger: 日志记录
+
+使用示例:
+```python
+from src.gui.main_gui_program import run
+
+# 启动主程序
+run()
+```
 """
 import os
 import shutil
@@ -21,9 +44,33 @@ from src.core.Credentials import credentials
 class MainWindow(QMainWindow):
     """
     主窗口类，负责创建和管理 GUI 界面。
+    
+    此类实现了校园网登录助手的主界面功能，包括登录/下线操作、网络状态监控、
+    计划任务管理和一键登录文件生成等功能。
+    
+    属性:
+        ui: UI界面实例
+        task_manager: 任务调度管理器实例
+        task_executor: 异步任务执行器实例
+        keep_alive_timer: 网络保活定时器
+        dragging: 窗口拖动状态标志
+        offset: 窗口拖动偏移量
+        _last_network_status: 上次网络状态记录
     """
 
     def __init__(self):
+        """
+        初始化主窗口，设置UI界面和相关组件。
+        
+        功能:
+        - 加载UI界面
+        - 设置无边框窗口和透明背景
+        - 初始化凭证管理器和任务管理器
+        - 设置网络保活定时器
+        - 配置日志系统
+        - 连接UI组件信号和槽函数
+        - 设置窗口拖动功能
+        """
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -62,6 +109,10 @@ class MainWindow(QMainWindow):
     def _init_ui_connect_(self):
         """
         初始化 UI 组件的事件连接。
+        
+        功能:
+        - 连接按钮点击事件到相应的处理函数
+        - 初始化任务表格的列标题和对齐方式
         """
         self.ui.select_file_btn.clicked.connect(self.select_file)
         self.ui.create_btn.clicked.connect(self.create_task)
@@ -93,7 +144,14 @@ class MainWindow(QMainWindow):
 
     def eventFilter(self, obj, event):
         """
-        事件过滤器，处理标题栏的鼠标事件。
+        事件过滤器，处理标题栏的鼠标事件以实现窗口拖动。
+        
+        参数:
+            obj: 事件源对象
+            event: 事件对象
+        
+        返回:
+            bool: 事件是否被处理
         """
         if obj == self.ui.frame_title:
             if event.type() == QEvent.MouseButtonPress:
@@ -106,7 +164,10 @@ class MainWindow(QMainWindow):
 
     def mousePressEvent(self, event):
         """
-        鼠标按下事件，记录鼠标按下时的位置。
+        鼠标按下事件，记录鼠标按下时的位置，用于窗口拖动。
+        
+        参数:
+            event: 鼠标事件对象
         """
         if event.button() == Qt.LeftButton:
             self.dragging = True
@@ -115,20 +176,26 @@ class MainWindow(QMainWindow):
     def mouseMoveEvent(self, event):
         """
         鼠标移动事件，根据鼠标移动的偏移量移动窗口。
+        
+        参数:
+            event: 鼠标事件对象
         """
         if self.dragging:
             self.move(event.globalPos() - self.offset)
 
     def mouseReleaseEvent(self, event):
         """
-        鼠标释放事件，停止拖动。
+        鼠标释放事件，停止窗口拖动。
+        
+        参数:
+            event: 鼠标事件对象
         """
         if event.button() == Qt.LeftButton:
             self.dragging = False
     
     def _toggle_keep_network_online(self):
         """
-        切换保持网络在线功能的开关
+        切换保持网络在线功能的开关，记录日志。
         """
         if self.ui.pushButton_keeplogin.isChecked():
             logger.info("保持网络功能已开启")
@@ -137,7 +204,12 @@ class MainWindow(QMainWindow):
     
     def _check_network_status_and_update_tabwiget(self):
         """
-        检查网络状态，先更新UI显示，再根据保活按钮状态决定是否尝试登录
+        定期检查网络状态，更新UI显示，并在需要时自动尝试登录。
+        
+        功能:
+        - 检查网络连接状态
+        - 更新UI中的网络状态显示
+        - 在网络离线且保活功能开启时，自动尝试重新登录
         """
         # logger.LOG_LEVEL = "CRITICAL"
         # setup_logger()
@@ -148,7 +220,7 @@ class MainWindow(QMainWindow):
 
     def setup_log_context_menu(self):
         """
-        设置日志控件的右键菜单
+        设置日志控件的右键菜单，用于清空日志内容。
         """
         self.ui.menuBar.hide()
         
@@ -161,24 +233,35 @@ class MainWindow(QMainWindow):
 
     def save_credentials(self):
         """
-        保存用户凭证到配置文件。
+        保存用户凭证到配置文件，根据用户选择决定是否保存密码。
         """
-        username = self.ui.lineEdit_username.text()
+        username = self.ui.lineEdit_username.text().strip()
+        password = self.ui.lineEdit_password.text().strip()
         setup_logger(username=username)
         if self.ui.checkBox.isChecked():
-            credentials.set('username', self.ui.lineEdit_username.text().strip())
-            credentials.set('password', self.ui.lineEdit_password.text().strip())
+            credentials.set('username', username)
+            credentials.set('password', password)
         else:
             credentials.set('username', '')
             credentials.set('password', '')
 
     def handle_general_finished(self, success, message, op_type="unknown"):
         """
-        处理异步任务完成后的回调。
-        - finished: 任务完成信号，参数为(success: bool, message: str, op_type: str)
-        # success: 任务是否执行成功的布尔值
-        # message: 任务执行返回结果或错误信息
-        # op_type: 操作类型标识
+        处理异步任务完成后的回调，根据任务类型更新UI状态。
+        
+        参数:
+            success: 任务是否执行成功的布尔值
+            message: 任务执行返回结果或错误信息
+            op_type: 操作类型标识
+        
+        支持的操作类型:
+        - "login": 登录操作
+        - "dislogin": 下线操作
+        - "exe_generation": 生成EXE文件
+        - "create_task": 创建计划任务
+        - "query_tasks": 查询计划任务
+        - "delete_task": 删除计划任务
+        - "keep_alive_check": 网络保活检查
         """
         try:
             if op_type == "login":
@@ -340,7 +423,9 @@ class MainWindow(QMainWindow):
                         # if self.ui.pushButton_keeplogin.isChecked() :
                         if self.ui.pushButton_keeplogin.isChecked() and (current_time.hour() <= 24 and current_time.hour() > 7):
                             # 在后台线程执行登录尝试
-                            networkmanager.login()
+                            username = self.ui.lineEdit_username.text().strip()
+                            password = self.ui.lineEdit_password.text().strip()
+                            networkmanager.login(username=username, password=password)
         except Exception as e:
             logger.error(f"处理异步任务 {op_type} 结果失败: {e}")
             QMessageBox.critical(self, "错误", f"处理异步任务 {op_type} 结果失败: {e}")
@@ -352,7 +437,14 @@ class MainWindow(QMainWindow):
 
     def login(self):
         """
-        执行登录操作。
+        执行登录操作，异步调用NetworkManager进行校园网登录。
+        
+        功能:
+        - 更新UI状态为"登录中"
+        - 禁用登录按钮防止重复点击
+        - 获取用户名和密码
+        - 异步执行登录任务
+        - 保存用户凭证
         """
         self.ui.stackedWidget_message.setCurrentIndex(0)
         self.ui.label_black_message.setText("登录中...")
@@ -369,7 +461,14 @@ class MainWindow(QMainWindow):
 
     def dislogin(self):
         """
-        执行下线操作。
+        执行下线操作，异步调用NetworkManager进行校园网下线。
+        
+        功能:
+        - 更新UI状态为"下线中"
+        - 禁用下线按钮防止重复点击
+        - 获取用户名
+        - 异步执行下线任务
+        - 保存用户凭证
         """
         self.ui.stackedWidget_message.setCurrentIndex(0)
         self.ui.label_black_message.setText("下线中...")
@@ -385,7 +484,12 @@ class MainWindow(QMainWindow):
 
     def select_file(self):
         """
-        选择要执行的文件。
+        选择要执行的文件，用于创建计划任务。
+        
+        功能:
+        - 打开文件选择对话框
+        - 获取用户选择的文件路径
+        - 更新UI中的文件路径和文件名显示
         """
         file_path, _ = QFileDialog.getOpenFileName(
             parent=self, 
@@ -402,6 +506,10 @@ class MainWindow(QMainWindow):
     def create_task(self):
         """
         异步创建计划任务。
+        
+        功能:
+        - 验证文件路径的有效性
+        - 异步执行任务创建操作
         """
         file_path = self.ui.file_path_edit.text().strip()
 
@@ -418,6 +526,10 @@ class MainWindow(QMainWindow):
     def query_tasks(self):
         """
         异步查询计划任务。
+        
+        功能:
+        - 异步执行任务查询操作
+        - 结果会通过handle_general_finished方法更新到任务表格中
         """
         self.task_executor.execute_task(
             func=lambda: self.task_manager.query_tasks(), 
@@ -427,6 +539,11 @@ class MainWindow(QMainWindow):
     def delete_task(self):
         """
         异步删除计划任务。
+        
+        功能:
+        - 检查是否选择了要删除的任务
+        - 显示确认对话框
+        - 异步执行任务删除操作
         """
         selected_items = self.ui.task_table.selectedItems()
         if not selected_items:
@@ -449,7 +566,15 @@ class MainWindow(QMainWindow):
     def create_exe(self):
         """
         生成自动登录的 EXE 文件。
-        通过复制预先生成的AutoLoginScript.exe文件到任务文件夹
+        
+        功能:
+        - 确保任务文件夹存在
+        - 从源路径复制预先生成的 AutoLoginScript.exe 文件
+        - 显示生成成功提示和文件路径
+        - 提供打开文件目录的选项
+        
+        异常:
+            FileNotFoundError: 当源EXE文件不存在时抛出
         """
 
         try:
@@ -515,16 +640,48 @@ class MainWindow(QMainWindow):
 
 
 class PasswordDialog(QDialog):
+    """
+    密码验证对话框，用于验证用户是否有权限使用程序。
+    
+    属性:
+        ui: 对话框UI实例，包含密码输入框和提示信息
+    """
     def __init__(self, parent=None):
+        """
+        初始化密码对话框
+        
+        参数:
+            parent (QWidget, optional): 父窗口控件，默认为None
+        """
         super().__init__(parent)
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
         self.ui.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setText("确认")
         self.ui.buttonBox.button(QDialogButtonBox.StandardButton.Cancel).setText("取消")
 
+
 def run():
     """
-    启动主界面。
+    启动主界面程序
+    
+    功能说明：
+    1. 创建QApplication实例
+    2. 创建并显示主窗口
+    3. 根据配置决定是否需要密码验证
+    4. 运行应用程序主循环
+    
+    注意事项：
+    - 程序启动时会检查是否设置了主界面锁定
+    - 如果设置了锁定，会显示密码验证对话框
+    - 密码验证成功后才能使用程序的全部功能
+    - 验证失败次数超过限制可能会导致程序退出
+    
+    示例:
+    ```python
+    # 通过导入并调用此函数来启动应用程序
+    from src.gui.main_gui_program import run
+    run()
+    ```
     """
     # 首先创建QApplication实例
     application = QApplication(sys.argv)
@@ -533,7 +690,6 @@ def run():
     window.show()
     # # =================================================================
     # 禁用窗口功能，直到密码验证通过
-
     if credentials.get('MAIN_LOCK'):
         window.setEnabled(False)
         password_dialog = PasswordDialog(window)
@@ -547,5 +703,4 @@ def run():
             else:
                 sys.exit()
     # # =================================================================
-
     sys.exit(application.exec())

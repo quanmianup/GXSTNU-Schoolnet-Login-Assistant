@@ -1,19 +1,51 @@
-import base64
+# -*- coding: utf-8 -*-
+"""
+校园网登录助手 - 凭证管理模块
+
+该模块提供了安全的凭证存储与管理功能，支持密码的加密存储和解密访问。
+主要功能：
+- AES ECB模式对称加密，确保敏感信息安全存储
+- 配置文件自动创建和持久化功能
+- 凭证缓存机制，提高频繁访问性能
+- 全局单例模式设计，确保系统中凭证管理的一致性
+
+依赖项：
+- Crypto (pycryptodome)：提供AES加密算法支持
+- base64：用于编码解码二进制数据
+- importlib：支持动态导入配置模块
+- os, re：文件操作和正则表达式处理
+- src.utils.logger：日志记录
+- src.core.TaskScheduler：任务调度器，用于获取配置文件路径
+
+使用示例：
+```python
+# 获取凭证管理器单例
+from src.core.Credentials import credentials
+
+# 读取凭证
+username = credentials.get("username")
+password = credentials.get("password")  # 自动解密
+
+# 设置凭证
+credentials.set("username", "new_username")
+credentials.set("password", "new_password")  # 自动加密存储
+
+# 保存配置（通常不需要手动调用，set方法会自动触发）
+credentials.save_to_file()
+```
+"""
 import os
 import re
 import base64
 import importlib.util
-import base64
 from Crypto.Random import get_random_bytes
-
-from src.utils.logger import logger
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad, pad
 
 from src.utils.logger import logger
 from src.core.TaskScheduler import TaskScheduler
 
-# 全局CREDENTIALS变量
+# 全局CREDENTIALS变量，用于存储所有凭证信息
 CREDENTIALS = {}
 
 class CredentialManager:
@@ -40,6 +72,12 @@ class CredentialManager:
     - 首次运行时会自动创建 config/local_credentials.py 配置文件
     - 密码会自动加密存储，明文仅存在于内存中
     - 修改凭证后自动调用 save_to_file() 持久化
+    
+    属性：
+    - _cache: 内部缓存字典，用于存储已解密的凭证值，提高访问效率
+    - KEY: AES加密密钥（二进制格式），用于加解密敏感数据
+    - task_folder: 任务文件夹路径，从TaskScheduler获取
+    - CREDENTIALS_file_path: 凭证配置文件的完整路径
     """
 
     def __init__(self):
@@ -49,16 +87,18 @@ class CredentialManager:
         2. 若不存在则创建默认配置文件
         3. 加载加密密钥并验证有效性
         """
-        self._cache = {}
-        self.KEY = None
-        self.task_folder = TaskScheduler().task_folder
-        self.CREDENTIALS_file_path = self._get_config_path()
-        self._load_credentials()
-        self._load_key()
+        self._cache = {}  # 凭证缓存字典，存储解密后的凭证值
+        self.KEY = None   # AES加密密钥
+        self.task_folder = TaskScheduler().task_folder  # 任务文件夹路径
+        self.CREDENTIALS_file_path = self._get_config_path()  # 配置文件路径
+        self._load_credentials()  # 加载凭证配置
+        self._load_key()  # 加载加密密钥
     
     def _load_credentials(self):
         """
         从配置文件中动态加载CREDENTIALS配置
+        通过importlib模块动态导入配置文件，避免硬编码路径依赖
+        若配置文件不存在或格式错误，会记录日志并抛出异常
         """
         global CREDENTIALS
         
@@ -84,15 +124,22 @@ class CredentialManager:
             raise ValueError(f"加载配置文件失败: {str(e)}")
 
     def _load_key(self):
+        """
+        加载或生成AES加密密钥
+        如果配置中没有ENCRYPTED_KEY，则自动生成新密钥并保存
+        否则从配置中解码并加载已有的密钥
+        """
         encrypted_key = CREDENTIALS.get('ENCRYPTED_KEY')
         if not encrypted_key:
             logger.error("未设置ENCRYPTED_KEY，正在初始化密钥")
-            key = get_random_bytes(32)
+            key = get_random_bytes(32)  # 生成32字节（256位）的随机密钥
             key_b64 = base64.b64encode(key).decode('utf-8')
             CREDENTIALS['ENCRYPTED_KEY'] = key_b64
             self.save_to_file()
             logger.info("✅ 密钥已生成并写入配置文件")
-        self.KEY = base64.b64decode(encrypted_key)
+            self.KEY = base64.b64decode(key_b64)
+        else:
+            self.KEY = base64.b64decode(encrypted_key)
 
     def _get_config_path(self):
         """
@@ -133,14 +180,13 @@ class CredentialManager:
         try:
             cipher = AES.new(self.KEY, AES.MODE_ECB)
             decrypted_padded = cipher.decrypt(base64.b64decode(encrypted_data))
-            # ✅ 显式调用 unpad
             decrypted_data = unpad(decrypted_padded, AES.block_size)
             return decrypted_data.decode('utf-8')
         except ValueError as e:
             # 🛠️ 明确处理填充错误
             raise ValueError("Invalid data padding") from e
 
-    def get(self, key, default=None):
+    def get(self, key:str, default=None):
         """
         获取指定凭证项的值（自动处理解密）
 
@@ -150,18 +196,12 @@ class CredentialManager:
 
         返回:
             Any: 对应的凭证值（密码会自动解密），未找到时返回default
-
-        异常:
-            TypeError: 当key不是字符串类型时抛出
         """
-        # 参数校验
-        if not isinstance(key, str):
-            raise TypeError(f"key必须为字符串类型，当前类型: {type(key)}")
-        # 统一转换为大写键名（大小写不敏感）
+
         key_upper = key.upper()
         # 优先返回缓存值
-        if key in self._cache:
-            return self._cache[key]
+        if key_upper in self._cache:
+            return self._cache[key_upper]
         try:
             if key_upper == 'PASSWORD':
                 # 处理密码的特殊解密逻辑
@@ -173,7 +213,7 @@ class CredentialManager:
 
             # 更新缓存（仅缓存有效非默认值）
             if value is not default:
-                self._cache[key] = value
+                self._cache[key_upper] = value
 
             return value
 
@@ -182,28 +222,30 @@ class CredentialManager:
             logger.error(f"获取凭证失败，key={key}: {str(e)}")
             return default
 
-    def set(self, key, value):
+    def set(self, key:str, value:any):
         """
-        设置凭证项的值（自动处理加密存储）
+        设置凭证项的值（敏感数据自动处理加密存储）
 
         参数:
-            key (str): 凭证键名
+            key (str): 凭证键名（大小写不敏感）
             value (Any): 待存储的凭证值
         """
-        key_upper = key.upper()
-        if key_upper == 'PASSWORD':
-            CREDENTIALS['ENCRYPTED_PASSWORD'] = self._encrypt(value)
-        else:
-            CREDENTIALS[key_upper] = value
-        self.save_to_file()
-        self._cache[key] = value
+        try:
+            key_upper = key.upper()
+            if key_upper == 'PASSWORD':
+                CREDENTIALS['ENCRYPTED_PASSWORD'] = self._encrypt(value)
+            else:
+                CREDENTIALS[key_upper] = value
+            self.save_to_file()
+            self._cache[key_upper] = value
+        except Exception as e:
+            logger.error(f"设置凭证失败，key={key}: {str(e)}")
+            raise ValueError(f"设置凭证失败，key={key}: {str(e)}")
 
     def save_to_file(self):
         """
         将当前配置持久化到文件（保持原有文件结构）
-
-        参数:
-            file_path (str): 配置文件路径
+        保留文件中的注释和格式，仅更新CREDENTIALS字典中的键值对
         """
         # 确保配置目录存在
         os.makedirs(os.path.dirname(self.CREDENTIALS_file_path), exist_ok=True)
@@ -246,6 +288,7 @@ class CredentialManager:
         """
         创建默认配置文件（仅当文件不存在时）
         包含初始密钥、空凭证和默认配置参数
+        创建的文件包含详细注释，说明各配置项的用途
         """
         # 确保配置目录存在
         os.makedirs(os.path.dirname(self.CREDENTIALS_file_path), exist_ok=True)
@@ -285,5 +328,6 @@ CREDENTIALS = {
             logger.info(f"已创建 {self.CREDENTIALS_file_path} 并写入默认配置")
 
 
-# 全局单例
+# 全局单例实例，供系统其他模块直接调用
+# 使用方式：from src.core.Credentials import credentials
 credentials = CredentialManager()

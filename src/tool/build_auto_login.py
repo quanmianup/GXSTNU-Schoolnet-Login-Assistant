@@ -1,11 +1,29 @@
-import sys
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+自动登录脚本打包工具
+
+此脚本用于将AutoLoginScript.py打包为可执行文件(.exe)，使用PyInstaller工具进行打包。
+打包后的可执行文件可以在没有Python环境的Windows系统上运行，方便用户设置定时任务。
+
+依赖项:
+- pyinstaller: 用于将Python脚本打包为可执行文件
+- uv: 推荐使用的Python包管理器
+
+使用说明:
+1. 确保已激活虚拟环境
+2. 安装pyinstaller: uv pip install pyinstaller
+3. 运行此脚本: python build_auto_login.py
+"""
 import os
+import sys
 import shutil
 import subprocess
 from pathlib import Path
 
 # Windows 终端颜色支持
 class ConsoleColors:
+    """终端颜色常量类，用于在控制台输出彩色文本"""
     GREEN = '\033[92m'
     YELLOW = '\033[93m'
     RED = '\033[91m'
@@ -20,10 +38,13 @@ if not hasattr(sys, 'base_prefix') or sys.base_prefix == sys.prefix:
     print(f"{ConsoleColors.YELLOW}警告：建议在虚拟环境中运行此打包脚本。{ConsoleColors.ENDC}")
 
 
-
-# 清理临时文件
 def clean_cache_files(build_dir, spec_file):
-    """清理打包过程中生成的临时文件"""
+    """清理打包过程中生成的临时文件
+
+    参数:
+        build_dir (Path): PyInstaller构建过程中生成的临时目录路径
+        spec_file (Path): PyInstaller生成的.spec配置文件路径
+    """
     print(f"\n{ConsoleColors.GREEN}正在清理临时文件...{ConsoleColors.ENDC}")
     
     shutil.rmtree(build_dir)
@@ -31,9 +52,13 @@ def clean_cache_files(build_dir, spec_file):
 
     print(f"{ConsoleColors.GREEN}临时文件清理完成。{ConsoleColors.ENDC}")
 
-# 主打包函数
+
 def invoke_packaging():
-    """执行PyInstaller打包命令"""
+    """执行PyInstaller打包命令，将AutoLoginScript.py打包为单个可执行文件
+
+    返回:
+        bool: 打包是否成功完成
+    """
 
     # 获取项目根目录（从当前脚本位置向上两级，因为脚本在src/tool目录下）
     script_dir = Path(__file__).parent.resolve()
@@ -97,7 +122,6 @@ def invoke_packaging():
 
 # 主函数
 if __name__ == "__main__":
+    """主程序入口，启动AutoLoginScript的打包过程"""
     print(f"{ConsoleColors.GREEN}GXSTNU校园网登录助手 - AutoLoginScript打包脚本{ConsoleColors.ENDC}")
-    
-    # 执行打包
-    packaging_success = invoke_packaging()
+    invoke_packaging()

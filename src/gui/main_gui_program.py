@@ -25,9 +25,12 @@ run()
 ```
 """
 import os
+import re
 import shutil
 import subprocess
 import sys
+import webbrowser
+from packaging import version
 
 from PySide6.QtCore import Qt, QPoint, QTime, QEvent, QTimer
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QTableWidgetItem, QDialog, QDialogButtonBox
@@ -55,7 +58,6 @@ class MainWindow(QMainWindow):
         keep_alive_timer: 网络保活定时器
         dragging: 窗口拖动状态标志
         offset: 窗口拖动偏移量
-        _last_network_status: 上次网络状态记录
     """
 
     def __init__(self):
@@ -105,6 +107,10 @@ class MainWindow(QMainWindow):
 
         # 为标题栏添加事件过滤器
         self.ui.frame_title.installEventFilter(self)
+        
+        # 检查是否在启动时检查更新
+        if self.ui.checkBox_update.isChecked():
+            self.check_for_updates_on_startup()
     
     def _init_ui_connect_(self):
         """
@@ -130,17 +136,25 @@ class MainWindow(QMainWindow):
 
         self.ui.pushButton_login.clicked.connect(self.login)
         self.ui.pushButton_dislogin.clicked.connect(self.dislogin)
-        self.ui.pushButton_tab_main.clicked.connect(
-            lambda: self.ui.stackedWidget_tab.setCurrentIndex(0))
+        self.ui.pushButton_tab_main.clicked.connect(lambda: self.ui.stackedWidget_tab.setCurrentIndex(0))
         self.ui.pushButton_tab_manege.clicked.connect(
             lambda: (
                 self.ui.stackedWidget_tab.setCurrentIndex(1),
                 self.ui.time_edit.setTime(QTime.currentTime()),
                 self.query_tasks()
             ))
+        self.ui.pushButton_help.clicked.connect(lambda: self.ui.stackedWidget_other.setCurrentIndex(0))
+        self.ui.pushButton_update.clicked.connect(lambda: self.ui.stackedWidget_other.setCurrentIndex(1))
+        self.ui.pushButton_disclaimer.clicked.connect(lambda: self.ui.stackedWidget_other.setCurrentIndex(2))
+        self.ui.pushButton_about.clicked.connect(lambda: self.ui.stackedWidget_other.setCurrentIndex(3))
+
+
         
         # 连接保活按钮信号
         self.ui.pushButton_keeplogin.clicked.connect(self._toggle_keep_network_online)
+        
+        # 连接检查更新按钮信号
+        self.ui.pushButton_update.clicked.connect(self.check_for_updates)
 
     def eventFilter(self, obj, event):
         """
@@ -155,43 +169,87 @@ class MainWindow(QMainWindow):
         """
         if obj == self.ui.frame_title:
             if event.type() == QEvent.MouseButtonPress:
-                self.mousePressEvent(event)
+                if event.button() == Qt.LeftButton:
+                    self.dragging = True
+                    self.offset = event.globalPos() - self.pos()
             elif event.type() == QEvent.MouseMove:
-                self.mouseMoveEvent(event)
+                if self.dragging:
+                    self.move(event.globalPos() - self.offset)
             elif event.type() == QEvent.MouseButtonRelease:
-                self.mouseReleaseEvent(event)
+                if event.button() == Qt.LeftButton:
+                    self.dragging = False
         return super().eventFilter(obj, event)
-
-    def mousePressEvent(self, event):
+    
+    def check_for_updates(self):
         """
-        鼠标按下事件，记录鼠标按下时的位置，用于窗口拖动。
+        检查应用程序是否有更新。
         
-        参数:
-            event: 鼠标事件对象
+        功能:
+        - 从Gitee仓库获取最新版本信息
+        - 与当前版本进行比较
+        - 根据比较结果显示相应的提示信息
         """
-        if event.button() == Qt.LeftButton:
-            self.dragging = True
-            self.offset = event.globalPos() - self.pos()
-
-    def mouseMoveEvent(self, event):
+        try:
+            logger.info("正在检查更新...")
+            
+            # 在异步任务中执行网络请求，避免阻塞UI
+            self.task_executor.execute_task(
+                func=self._fetch_latest_version,
+                op_type="check_updates"
+            )
+        except Exception as e:
+            logger.error(f"检查更新失败: {str(e)}")
+            QMessageBox.critical(self, "错误", f"检查更新失败: {str(e)}")
+            self.ui.stackedWidget_message.setCurrentIndex(2)
+            self.ui.label_red_message.setText("检查更新失败")
+    
+    def check_for_updates_on_startup(self):
         """
-        鼠标移动事件，根据鼠标移动的偏移量移动窗口。
+        在应用启动时检查更新。
+        """
+        self.check_for_updates()
+    
+    def _fetch_latest_version(self):
+        """
+        从Gitee仓库获取最新版本信息。
         
-        参数:
-            event: 鼠标事件对象
+        返回:
+            dict: 包含最新版本信息的字典
         """
-        if self.dragging:
-            self.move(event.globalPos() - self.offset)
-
-    def mouseReleaseEvent(self, event):
-        """
-        鼠标释放事件，停止窗口拖动。
+        import requests
         
-        参数:
-            event: 鼠标事件对象
-        """
-        if event.button() == Qt.LeftButton:
-            self.dragging = False
+        try:
+            url = "https://gitee.com/quanmianup/GXSTNU-Schoolnet-Login-Assistant/releases"
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            
+            # 使用正则表达式从HTML中提取最新版本号
+            version_pattern = r'v?([0-9]+\.[0-9]+\.[0-9]+)'
+            matches = re.findall(version_pattern, response.text)
+            
+            if not matches:
+                return {"success": False, "message": "未找到版本信息"}
+            
+            # 获取最新版本号（假设第一个是最新的）
+            latest_version = matches[0]
+            
+            # 获取当前版本号
+            current_version = "1.0.0"  # 从pyproject.toml中读取的版本号
+            
+            # 比较版本号
+            is_newer = version.parse(latest_version) > version.parse(current_version)
+            
+            return {
+                "success": True,
+                "latest_version": latest_version,
+                "current_version": current_version,
+                "is_newer": is_newer
+            }
+            
+        except requests.RequestException as e:
+            return {"success": False, "message": f"网络请求失败: {str(e)}"}
+        except Exception as e:
+            return {"success": False, "message": f"获取版本信息失败: {str(e)}"}
     
     def _toggle_keep_network_online(self):
         """
@@ -399,6 +457,48 @@ class MainWindow(QMainWindow):
                 else:
                     QMessageBox.critical(self, "错误", f"删除任务失败:\n{delete_message}")
                     logger.error(f"删除任务失败: {delete_message}")
+            
+            elif op_type == "check_updates":
+                # 检查更新结果处理
+                if success and message and message.get("success"):
+                    self.ui.stackedWidget_message.setCurrentIndex(0)
+                    
+                    if message.get("is_newer"):
+                        # 有新版本
+                        latest_version = message.get("latest_version")
+                        current_version = message.get("current_version")
+                        
+                        logger.info(f"发现新版本: {latest_version}")
+                        
+                        msg_box = QMessageBox(self)
+                        msg_box.setWindowTitle("发现新版本")
+                        msg_box.setText(f"发现新版本 {latest_version}，当前版本 {current_version}\n\n是否前往Gitee查看更新内容？")
+                        msg_box.setIcon(QMessageBox.Information)
+                        
+                        yes_btn = msg_box.addButton("前往Gitee", QMessageBox.ActionRole)
+                        no_btn = msg_box.addButton("取消", QMessageBox.RejectRole)
+                        
+                        msg_box.exec_()
+                        
+                        if msg_box.clickedButton() == yes_btn:
+                            # 打开浏览器访问Gitee仓库
+                            webbrowser.open("https://gitee.com/quanmianup/GXSTNU-Schoolnet-Login-Assistant/releases")
+                            
+                        self.ui.label_green_message.setText(f"发现新版本 {latest_version}")
+                        self.ui.stackedWidget_message.setCurrentIndex(1)
+                        
+                    else:
+                        # 已是最新版本
+                        QMessageBox.information(self, "提示", f"当前已是最新版本 {message.get('current_version')}")
+                        self.ui.label_green_message.setText(f"当前已是最新版本")
+                        self.ui.stackedWidget_message.setCurrentIndex(1)
+                else:
+                    # 检查更新失败
+                    error_msg = message.get("message", "未知错误") if isinstance(message, dict) else str(message)
+                    logger.error(f"检查更新失败: {error_msg}")
+                    QMessageBox.critical(self, "错误", f"检查更新失败: {error_msg}")
+                    self.ui.label_red_message.setText("检查更新失败")
+                    self.ui.stackedWidget_message.setCurrentIndex(2)
             
             elif op_type == "keep_alive_check":
                 # 网络在线检测结果处理

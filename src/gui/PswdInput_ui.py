@@ -40,7 +40,7 @@ class Ui_Dialog(object):
         self.buttonBox.setCenterButtons(True)
         self.label_QCimage = QLabel(Dialog)
         self.label_QCimage.setObjectName(u"label_QCimage")
-        self.label_QCimage.setGeometry(QRect(155, 70, 90, 120))
+        self.label_QCimage.setGeometry(QRect(150, 50, 100, 151))
         self.label_QCimage.setPixmap(QPixmap(u":/images/images/QC.jpg"))
         self.label_QCimage.setScaledContents(True)
         self.label_QCimage.setAlignment(Qt.AlignmentFlag.AlignCenter)

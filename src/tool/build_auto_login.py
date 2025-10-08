@@ -84,7 +84,12 @@ def invoke_packaging():
         '--icon', str(icon_file), # 设置应用图标（使用.ico格式）
         '--distpath', str(dist_dir),
         '--workpath', str(build_dir),
-        # 添加隐藏的导入以确保所有依赖都被包含
+        '--upx-dir=upx',          # 添加UPX压缩支持
+        '--upx-exclude=vcruntime140.dll',  # 某些DLL不适合压缩
+        '--exclude-module=tkinter',        # 排除未使用的模块
+        '--exclude-module=PIL',
+        '--exclude-module=numpy',
+        # 添加隐藏的导入以确保所有依赖都被包含在可执行文件中
         '--hidden-import=src.core.NetworkManager',
         '--hidden-import=src.utils.logger',
         '--hidden-import=requests',

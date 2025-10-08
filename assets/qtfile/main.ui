@@ -256,7 +256,7 @@ QPushButton{
 </string>
         </property>
         <property name="currentIndex">
-         <number>2</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="page_main">
          <widget class="QFrame" name="frame_main_2">
@@ -1390,7 +1390,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
              <property name="frameShadow">
               <enum>QFrame::Shadow::Raised</enum>
              </property>
-             <widget class="QStackedWidget" name="stackedWidget">
+             <widget class="QStackedWidget" name="stackedWidget_other">
               <property name="geometry">
                <rect>
                 <x>0</x>
@@ -1426,7 +1426,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                   <rect>
                    <x>10</x>
                    <y>0</y>
-                   <width>469</width>
+                   <width>470</width>
                    <height>400</height>
                   </rect>
                  </property>
@@ -1443,36 +1443,42 @@ li.checked::marker { content: &quot;\2612&quot;; }
                   <set>QTextEdit::AutoFormattingFlag::AutoAll</set>
                  </property>
                  <property name="markdown">
-                  <string notr="true">1.首页操作
+                  <string notr="true">**1.首页操作**
 
-1.1.登录/下线功能
+**1.1.登录/下线功能**
 
 单击首页标签，在输入框输入账号密码，点击“登录”/“下线”按钮**连接/下线**校园网；勾选“记住密码”可在下次打开程序时，自动输入账号信息。
 
-1.2.生成一键登录文件
+**1.2.生成一键登录文件**
 
 点击“生成一键登录文件”按钮可以在***C:\\ScheduledTasks***文件夹下生成***AutoLoginScript.exe***
-文件，双击这个文件可以自动登录校园网（要求只在登录在）。
+文件，双击这个文件可以自动登录校园网（要求至少在首页登录过一次并勾选“记住密码”选项，确保在打开程序时能自动填写账号密码）。
 
-点击&quot;保持在线&quot;按钮，系统会每5秒自动检测并保持网络连接。
+**1.3保持网络在线**
 
-日志查看
+程序会每5秒自动检测网络连接状态，点击&quot;保持网络在线&quot;按钮可开启保持网络在线功能，在**7：00-24:00**时间段若检测到网络**未连接**，会尝试**自动登录**
+校园网。
 
-右侧日志区域显示操作记录，右键点击可清空日志。
+**1.4日志查看**
 
-生成独立EXE
+右侧日志区域显示操作记录，右键点击可打开“清空输出”菜单。
 
-输入账号密码后，点击&quot;生成自动登录EXE&quot;按钮，文件将保存在C:ScheduledTasks目录。
+**2.定时任务管理**
 
-计划任务
+切换到&quot;定时任务管理&quot;标签页，可创建、删除和查询定时任务。
 
-切换到&quot;任务管理&quot;标签页，可创建、查询和删除定时自动登录任务。
+**2.1.定时任务使用说明**
 
-常见问题
+2.1.1将***AutoLoginScript.exe***文件加入定时任务可实现定时登录校园网功能。
 
-\- 登录失败：检查账号密码和网络连接，查看日志获取错误原因
+2.1.2首先设置需要定时启动的时间，随后点击“选择文件”按钮选择需要定时执行的文件，比如“
+***C:\\ScheduledTasks\\AutoLoginScript.exe***”，点击“创建任务”按钮即可。
 
-\- 修改账号：取消勾选&quot;记住密码&quot;并登录，或直接输入新账号密码
+2.1.3删除任务需要先选中任务，再单击“删除任务”按钮即可。
+
+**\**常见问题****
+
+\- 登录失败：检查账号密码和网络连接，确定网关ip为172.16.x.x，查看日志获取错误原因
 
 \- 任务不执行：确认EXE文件路径正确，检查Windows任务计划程序设置
 
@@ -1482,7 +1488,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
 
 \- 生成的EXE文件包含账号信息，请妥善保管
 
-\- 日志保存在c:ScheduledTaskslogs目录
+\- 日志保存在c:\\ScheduledTasks\\logs目录
 
 </string>
                  </property>
@@ -1494,33 +1500,208 @@ hr { height: 1px; border-width: 0; }
 li.unchecked::marker { content: &quot;\2610&quot;; }
 li.checked::marker { content: &quot;\2612&quot;; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'微软雅黑'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;1.首页操作&lt;/p&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;1.1.登录/下线功能&lt;/p&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;单击首页标签，在输入框输入账号密码，点击“登录”/“下线”按钮&lt;span style=&quot; font-weight:700;&quot;&gt;连接/下线&lt;/span&gt;校园网；勾选“记住密码”可在下次打开程序时，自动输入账号信息。&lt;/p&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;1.2.生成一键登录文件&lt;/p&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;点击“生成一键登录文件”按钮可以在&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;C:\ScheduledTasks&lt;/span&gt;文件夹下生成&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;AutoLoginScript.exe&lt;/span&gt;文件，双击这个文件可以自动登录校园网（要求只在登录在）。&lt;/p&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;点击&amp;quot;保持在线&amp;quot;按钮，系统会每5秒自动检测并保持网络连接。&lt;/p&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;日志查看&lt;/p&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;右侧日志区域显示操作记录，右键点击可清空日志。&lt;/p&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;生成独立EXE&lt;/p&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;输入账号密码后，点击&amp;quot;生成自动登录EXE&amp;quot;按钮，文件将保存在C:ScheduledTasks目录。&lt;/p&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;计划任务&lt;/p&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;切换到&amp;quot;任务管理&amp;quot;标签页，可创建、查询和删除定时自动登录任务。&lt;/p&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;常见问题&lt;/p&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- 登录失败：检查账号密码和网络连接，查看日志获取错误原因&lt;/p&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- 修改账号：取消勾选&amp;quot;记住密码&amp;quot;并登录，或直接输入新账号密码&lt;/p&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- 任务不执行：确认EXE文件路径正确，检查Windows任务计划程序设置&lt;/p&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;注意事项&lt;/p&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- 账号密码使用AES加密存储&lt;/p&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- 生成的EXE文件包含账号信息，请妥善保管&lt;/p&gt;
-&lt;p style=&quot; margin-top:6px; margin-bottom:6px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- 日志保存在c:ScheduledTaskslogs目录&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:11pt; font-weight:700;&quot;&gt;1.首页操作&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;1.1.登录/下线功能&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;单击首页标签，在输入框输入账号密码，点击“登录”/“下线”按钮&lt;span style=&quot; font-weight:700;&quot;&gt;连接/下线&lt;/span&gt;校园网；勾选“记住密码”可在下次打开程序时，自动输入账号信息。&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;1.2.生成一键登录文件&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;点击“生成一键登录文件”按钮可以在&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;C:\ScheduledTasks&lt;/span&gt;文件夹下生成&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;AutoLoginScript.exe&lt;/span&gt;文件，双击这个文件可以自动登录校园网（要求至少在首页登录过一次并勾选“记住密码”选项，确保在打开程序时能自动填写账号密码）。&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;1.3保持网络在线&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;程序会每5秒自动检测网络连接状态，点击&amp;quot;保持网络在线&amp;quot;按钮可开启保持网络在线功能，在&lt;span style=&quot; font-weight:700;&quot;&gt;7：00-24:00&lt;/span&gt;时间段若检测到网络&lt;span style=&quot; font-weight:700;&quot;&gt;未连接&lt;/span&gt;，会尝试&lt;span style=&quot; font-weight:700;&quot;&gt;自动登录&lt;/span&gt;校园网。&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;1.4日志查看&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;右侧日志区域显示操作记录，右键点击可打开“清空输出”菜单。&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:11pt; font-weight:700;&quot;&gt;2.定时任务管理&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;切换到&amp;quot;定时任务管理&amp;quot;标签页，可创建、删除和查询定时任务。&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;2.1.定时任务使用说明&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;2.1.1将&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;AutoLoginScript.exe&lt;/span&gt;文件加入定时任务可实现定时登录校园网功能。&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;2.1.2首先设置需要定时启动的时间，随后点击“选择文件”按钮选择需要定时执行的文件，比如“&lt;span style=&quot; font-weight:700; font-style:italic;&quot;&gt;C:\ScheduledTasks\AutoLoginScript.exe&lt;/span&gt;”，点击“创建任务”按钮即可。&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;2.1.3删除任务需要先选中任务，再单击“删除任务”按钮即可。&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:11pt; font-weight:700;&quot;&gt;**常见问题**&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- 登录失败：检查账号密码和网络连接，确定网关ip为172.16.x.x，查看日志获取错误原因&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- 任务不执行：确认EXE文件路径正确，检查Windows任务计划程序设置&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;注意事项&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- 账号密码使用AES加密存储&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- 生成的EXE文件包含账号信息，请妥善保管&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;- 日志保存在c:\ScheduledTasks\logs目录&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                 </widget>
                </widget>
               </widget>
-              <widget class="QWidget" name="page_update"/>
-              <widget class="QWidget" name="page_disclaimer"/>
-              <widget class="QWidget" name="page_about"/>
+              <widget class="QWidget" name="page_update">
+               <widget class="QProgressBar" name="progressBar">
+                <property name="geometry">
+                 <rect>
+                  <x>20</x>
+                  <y>240</y>
+                  <width>441</width>
+                  <height>23</height>
+                 </rect>
+                </property>
+                <property name="value">
+                 <number>0</number>
+                </property>
+                <property name="textVisible">
+                 <bool>true</bool>
+                </property>
+               </widget>
+               <widget class="QCheckBox" name="checkBox_update">
+                <property name="geometry">
+                 <rect>
+                  <x>330</x>
+                  <y>280</y>
+                  <width>121</width>
+                  <height>31</height>
+                 </rect>
+                </property>
+                <property name="text">
+                 <string>启动时检查更新</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+                <property name="tristate">
+                 <bool>false</bool>
+                </property>
+               </widget>
+              </widget>
+              <widget class="QWidget" name="page_disclaimer">
+               <widget class="QTextBrowser" name="textBrowser_disclaimer">
+                <property name="geometry">
+                 <rect>
+                  <x>10</x>
+                  <y>0</y>
+                  <width>470</width>
+                  <height>400</height>
+                 </rect>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="frameShape">
+                 <enum>QFrame::Shape::NoFrame</enum>
+                </property>
+                <property name="autoFormatting">
+                 <set>QTextEdit::AutoFormattingFlag::AutoAll</set>
+                </property>
+                <property name="markdown">
+                 <string notr="true">免责声明
+
+1\. 本软件仅用于个人学习和测试使用，无需提供任何代价，并不可用于任何商业用途及目的（包括二次开发）；
+
+2\. 工具仅用于简化广西科技师范学院校园网的登录/注销操作，不会破解、绕过或干扰校园网的正常认证流程，所有操作均基于用户主动提供的账号信息；
+
+3\. 使用本软件时请遵守相关法律法规以及广西科技师范学院校园网使用规定，不得用于任何违法用途；
+
+4\. 本工具推荐使用者通过官方渠道获取校园网服务，使用者需遵守学校网络管理规定，若学校禁止使用第三方登录工具，请立即停止工具的使用并删除工具；
+
+5\. 本软件开源免费，作者不对使用本软件造成的任何直接或间接损失负责（包括但不限于账号异常、网络中断、数据丢失等）；
+
+6\. 使用本软件即表示您同意本免责声明的所有条款；
+
+7\. 若本工具有造成任何可能的侵权行为，请进行联系，将会立即停止可能的侵权行为，并关闭代码仓库；
+
+8\. 本工具将根据广西科技师范学院校园网协议进行技术调整，确保合法合规；
+
+9\. 作者保留对本软件和免责声明的最终解释权。
+
+</string>
+                </property>
+                <property name="html">
+                 <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: &quot;\2610&quot;; }
+li.checked::marker { content: &quot;\2612&quot;; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'微软雅黑'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;免责声明&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;1. 本软件仅用于个人学习和测试使用，无需提供任何代价，并不可用于任何商业用途及目的（包括二次开发）；&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;2. 工具仅用于简化广西科技师范学院校园网的登录/注销操作，不会破解、绕过或干扰校园网的正常认证流程，所有操作均基于用户主动提供的账号信息；&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;3. 使用本软件时请遵守相关法律法规以及广西科技师范学院校园网使用规定，不得用于任何违法用途；&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;4. 本工具推荐使用者通过官方渠道获取校园网服务，使用者需遵守学校网络管理规定，若学校禁止使用第三方登录工具，请立即停止工具的使用并删除工具；&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;5. 本软件开源免费，作者不对使用本软件造成的任何直接或间接损失负责（包括但不限于账号异常、网络中断、数据丢失等）；&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;6. 使用本软件即表示您同意本免责声明的所有条款；&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;7. 若本工具有造成任何可能的侵权行为，请进行联系，将会立即停止可能的侵权行为，并关闭代码仓库；&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;8. 本工具将根据广西科技师范学院校园网协议进行技术调整，确保合法合规；&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;9. 作者保留对本软件和免责声明的最终解释权。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+               </widget>
+              </widget>
+              <widget class="QWidget" name="page_about">
+               <widget class="QTextBrowser" name="textBrowser_about">
+                <property name="geometry">
+                 <rect>
+                  <x>30</x>
+                  <y>0</y>
+                  <width>430</width>
+                  <height>400</height>
+                 </rect>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="frameShape">
+                 <enum>QFrame::Shape::NoFrame</enum>
+                </property>
+                <property name="autoFormatting">
+                 <set>QTextEdit::AutoFormattingFlag::AutoAll</set>
+                </property>
+                <property name="markdown">
+                 <string notr="true">广西科师校园网登录助手
+
+版本号：v1.0.0
+
+作者：quanmianup
+
+Gitee：https://gitee.com/quanmianup/GXSTNU-Schoolnet-Login-Assistant（主推）
+
+Github：https://github.com/quanmianup/GXSTNU-Schoolnet-Login-Assistant
+
+开源协议：MIT License
+
+本工具仅供学习交流使用
+
+</string>
+                </property>
+                <property name="html">
+                 <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: &quot;\2610&quot;; }
+li.checked::marker { content: &quot;\2612&quot;; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'微软雅黑'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;广西科师校园网登录助手&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;版本号：v1.0.0&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;作者：quanmianup&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Gitee：https://gitee.com/quanmianup/GXSTNU-Schoolnet-Login-Assistant（主推）&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Github：https://github.com/quanmianup/GXSTNU-Schoolnet-Login-Assistant&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;开源协议：MIT License&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;本工具仅供学习交流使用&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+               </widget>
+              </widget>
              </widget>
             </widget>
            </item>
@@ -1628,7 +1809,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="pushButton_aboutAuthor">
+               <widget class="QPushButton" name="pushButton_about">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                   <horstretch>0</horstretch>

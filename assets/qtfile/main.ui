@@ -203,7 +203,7 @@ QPushButton:hover{
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_tab_manege_2">
+          <widget class="QPushButton" name="pushButton_tab_other">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -220,7 +220,7 @@ QPushButton:hover{
             <string notr="true"/>
            </property>
            <property name="text">
-            <string>其它</string>
+            <string>更多</string>
            </property>
           </widget>
          </item>
@@ -2106,7 +2106,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
   <tabstop>pushButton_keeplogin</tabstop>
   <tabstop>pushButton_tab_main</tabstop>
   <tabstop>pushButton_tab_manege</tabstop>
-  <tabstop>pushButton_tab_manege_2</tabstop>
+  <tabstop>pushButton_tab_other</tabstop>
   <tabstop>pushButton_minizing</tabstop>
   <tabstop>pushButton_close</tabstop>
   <tabstop>time_edit</tabstop>

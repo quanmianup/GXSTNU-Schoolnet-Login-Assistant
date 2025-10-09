@@ -305,6 +305,7 @@ class CredentialManager:
 7. RETRY_INTERVAL: 重试间隔时间(秒)
 8. TEST_URL: 网络连通性测试URL
 9. MAIN_LOCK: 主界面是否锁定
+10.UPDATE_ON_START：启动时是否检查更新
 """
 CREDENTIALS = {
     # 加密后的密钥（Base64 编码）
@@ -319,6 +320,7 @@ CREDENTIALS = {
     'RETRY_INTERVAL': 1.5,
     'TEST_URL': 'http://www.bilibili.com',
     'MAIN_LOCK': True,
+    'UPDATE_ON_START': True,
 }
 
         '''

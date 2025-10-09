@@ -125,14 +125,14 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.pushButton_tab_manege, 0, Qt.AlignmentFlag.AlignBottom)
 
-        self.pushButton_tab_manege_2 = QPushButton(self.frame_tab)
-        self.pushButton_tab_manege_2.setObjectName(u"pushButton_tab_manege_2")
-        sizePolicy1.setHeightForWidth(self.pushButton_tab_manege_2.sizePolicy().hasHeightForWidth())
-        self.pushButton_tab_manege_2.setSizePolicy(sizePolicy1)
-        self.pushButton_tab_manege_2.setMinimumSize(QSize(50, 30))
-        self.pushButton_tab_manege_2.setStyleSheet(u"")
+        self.pushButton_tab_other = QPushButton(self.frame_tab)
+        self.pushButton_tab_other.setObjectName(u"pushButton_tab_other")
+        sizePolicy1.setHeightForWidth(self.pushButton_tab_other.sizePolicy().hasHeightForWidth())
+        self.pushButton_tab_other.setSizePolicy(sizePolicy1)
+        self.pushButton_tab_other.setMinimumSize(QSize(50, 30))
+        self.pushButton_tab_other.setStyleSheet(u"")
 
-        self.horizontalLayout.addWidget(self.pushButton_tab_manege_2)
+        self.horizontalLayout.addWidget(self.pushButton_tab_other)
 
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -913,8 +913,8 @@ class Ui_MainWindow(object):
         QWidget.setTabOrder(self.pushButton_generate, self.pushButton_keeplogin)
         QWidget.setTabOrder(self.pushButton_keeplogin, self.pushButton_tab_main)
         QWidget.setTabOrder(self.pushButton_tab_main, self.pushButton_tab_manege)
-        QWidget.setTabOrder(self.pushButton_tab_manege, self.pushButton_tab_manege_2)
-        QWidget.setTabOrder(self.pushButton_tab_manege_2, self.pushButton_minizing)
+        QWidget.setTabOrder(self.pushButton_tab_manege, self.pushButton_tab_other)
+        QWidget.setTabOrder(self.pushButton_tab_other, self.pushButton_minizing)
         QWidget.setTabOrder(self.pushButton_minizing, self.pushButton_close)
         QWidget.setTabOrder(self.pushButton_close, self.time_edit)
         QWidget.setTabOrder(self.time_edit, self.file_path_edit)
@@ -950,7 +950,7 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.pushButton_tab_main.setText(QCoreApplication.translate("MainWindow", u"\u9996\u9875", None))
         self.pushButton_tab_manege.setText(QCoreApplication.translate("MainWindow", u"\u5b9a\u65f6\u4efb\u52a1\u7ba1\u7406", None))
-        self.pushButton_tab_manege_2.setText(QCoreApplication.translate("MainWindow", u"\u5176\u5b83", None))
+        self.pushButton_tab_other.setText(QCoreApplication.translate("MainWindow", u"\u66f4\u591a", None))
         self.lineEdit_username.setText("")
         self.lineEdit_username.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u8bf7\u8f93\u5165\u5b66\u53f7/\u5de5\u53f7", None))
         self.lineEdit_password.setPlaceholderText(QCoreApplication.translate("MainWindow", u"\u8bf7\u8f93\u5165\u5bc6\u7801", None))

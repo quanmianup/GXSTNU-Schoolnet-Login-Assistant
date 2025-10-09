@@ -71,8 +71,8 @@ class AsyncTaskExecutor(QObject):
         active_tasks: 活跃任务字典，键为任务ID，值为Future对象
         task_counter: 任务计数器，用于生成唯一任务ID
     """
-    # 任务完成信号：参数(success, message, operation_type)
-    finished = Signal(bool, object, str)  # 正确实例化信号
+    # 任务完成信号：参数(success, message, operation_type, extra_data)
+    finished = Signal(bool, object, str, dict)  # 正确实例化信号
 
     def __init__(self):
         """
@@ -88,13 +88,14 @@ class AsyncTaskExecutor(QObject):
         # 记录任务ID，用于区分不同任务
         self.task_counter = 0
 
-    def execute_task(self, func: Callable, op_type: str = "unknown") -> str:
+    def execute_task(self, func: Callable, op_type: str = "unknown", extra_data: dict = None) -> str:
         """
         执行异步任务，提交到线程池并返回任务ID。
         
         参数:
             func: 要执行的任务函数或已绑定参数的函数
             op_type: 操作类型标识（如"login", "dislogin"等）
+            extra_data: 额外数据，会传递到完成信号
         
         返回:
             str: 任务ID，可用于后续取消任务
@@ -111,12 +112,12 @@ class AsyncTaskExecutor(QObject):
             future = self.thread_pool.submit(self._run_task, func, op_type)
             # 存储任务引用以便追踪和取消
             self.active_tasks[task_id] = future
-            # 添加回调处理结果
-            future.add_done_callback(lambda f, tid=task_id: self._handle_future_result(f, tid))
+            # 添加回调处理结果，传递extra_data
+            future.add_done_callback(lambda f, tid=task_id, ed=extra_data: self._handle_future_result(f, tid, ed))
             return task_id
         except Exception as e:
             logger.error(f"[任务 {task_id}] 提交失败: {str(e)}")
-            self.finished.emit(False, f"任务提交失败: {str(e)}", op_type)
+            self.finished.emit(False, f"任务提交失败: {str(e)}", op_type, extra_data)
             return task_id
 
     def cancel_task(self, task_id: str) -> bool:
@@ -186,13 +187,14 @@ class AsyncTaskExecutor(QObject):
             logger.error(f"[任务执行] 失败: {task_name}, 错误: {str(e)}", exc_info=True)
             return False, f"任务执行失败: {str(e)}", op_type
 
-    def _handle_future_result(self, future: Future, task_id: str) -> None:
+    def _handle_future_result(self, future: Future, task_id: str, extra_data: dict = None) -> None:
         """
         处理任务执行结果的回调方法。
         
         参数:
             future: 任务的Future对象
             task_id: 任务ID
+            extra_data: 额外数据，会传递到完成信号
         
         功能:
             - 从活跃任务列表中移除已完成的任务
@@ -206,14 +208,15 @@ class AsyncTaskExecutor(QObject):
             # 获取任务结果
             success, message, op_type = future.result()
             # 发射完成信号
-            self.finished.emit(success, message, op_type)
+            self.finished.emit(success, message, op_type, extra_data)
         except (KeyboardInterrupt, SystemExit):
             # 允许这些异常向上传播
             raise
         except Exception as e:
             # 处理回调过程中的异常
             logger.error(f"[任务回调] 发生异常: {task_id}", exc_info=True)
-            self.finished.emit(False, f"处理任务ID（{task_id}）时发生未知错误: {str(e)}", "unknown")
+            op_type = task_id.split('_')[0] if '_' in task_id else "unknown"
+            self.finished.emit(False, f"处理任务ID（{task_id}）时发生未知错误: {str(e)}", op_type, extra_data)
 
     def __del__(self):
         """

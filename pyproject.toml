@@ -9,7 +9,7 @@ description = """
 这是一个专为广西科技师范学院校园网设计的自动登录/注销工具，提供图形用户界面，
 支持账号密码加密存储、定时登录、断线重连和详细的日志记录功能。
 """
-version = "1.0.0"
+version = "1.1.0"
 authors = [{ name = "quanmian", email = "1604125741@qq.com" }]
 readme = "README.md"
 license = "MIT"

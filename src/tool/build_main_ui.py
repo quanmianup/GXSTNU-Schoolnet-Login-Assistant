@@ -127,7 +127,13 @@ def invoke_packaging():
         bool: 打包是否成功完成
     """
     pyinstaller_path = check_pyinstaller()
-    
+
+    # 确保pyproject.toml文件存在
+    pyproject_file = project_root / 'pyproject.toml'
+    if not pyproject_file.exists():
+        print(f"{ConsoleColors.RED}错误：未找到pyproject.toml文件，请确保该文件存在于项目根目录。{ConsoleColors.ENDC}")
+        sys.exit(1)
+
     # 构建PyInstaller命令参数，包括AutoLoginScript.exe作为外部资源
     pyinstaller_args = [
         pyinstaller_path,
@@ -141,6 +147,7 @@ def invoke_packaging():
         '--clean',              # 清理PyInstaller缓存
         # 使用--add-data参数包含AutoLoginScript.exe作为外部资源
         f'--add-data={str(AutoLoginScriptExe)};.',
+        f'--add-data={str(pyproject_file)};.',
         # 添加隐藏的导入以确保所有依赖都被包含
         '--hidden-import=src.core.NetworkManager',
         '--hidden-import=src.utils.logger',

@@ -758,14 +758,13 @@ class MainWindow(QMainWindow):
             # 定义源EXE文件路径（AutoLoginScript.exe）
             # 使用相对路径或打包时包含的资源路径
             # 首先尝试从当前可执行文件所在目录查找
+            
             if getattr(sys, 'frozen', False):
                 # 如果是打包后的exe文件
-                current_dir = os.path.dirname(sys.executable)
-                source_exe_path = os.path.join(current_dir, "AutoLoginScript.exe")
+                source_exe_path = os.path.join(sys._MEIPASS, "AutoLoginScript.exe")
             else:
                 # 如果是开发环境
-                project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-                source_exe_path = os.path.join(project_root, "dist", "AutoLoginScript.exe")
+                source_exe_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "dist", "AutoLoginScript.exe")
             
             # 确保源文件存在
             if not os.path.exists(source_exe_path):

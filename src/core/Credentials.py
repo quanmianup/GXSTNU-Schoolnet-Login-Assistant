@@ -34,19 +34,21 @@ credentials.set("password", "new_password")  # 自动加密存储
 credentials.save_to_file()
 ```
 """
-import os
-import re
 import base64
 import importlib.util
-from Crypto.Random import get_random_bytes
+import os
+import re
+
 from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import unpad, pad
 
-from src.utils.logger import logger
 from src.core.TaskScheduler import TaskScheduler
+from src.utils.logger import logger
 
 # 全局CREDENTIALS变量，用于存储所有凭证信息
 CREDENTIALS = {}
+
 
 class CredentialManager:
     """
@@ -88,12 +90,12 @@ class CredentialManager:
         3. 加载加密密钥并验证有效性
         """
         self._cache = {}  # 凭证缓存字典，存储解密后的凭证值
-        self.KEY = None   # AES加密密钥
+        self.KEY = None  # AES加密密钥
         self.task_folder = TaskScheduler().task_folder  # 任务文件夹路径
         self.CREDENTIALS_file_path = self._get_config_path()  # 配置文件路径
         self._load_credentials()  # 加载凭证配置
         self._load_key()  # 加载加密密钥
-    
+
     def _load_credentials(self):
         """
         从配置文件中动态加载CREDENTIALS配置
@@ -101,12 +103,12 @@ class CredentialManager:
         若配置文件不存在或格式错误，会记录日志并抛出异常
         """
         global CREDENTIALS
-        
+
         # 检查配置文件是否存在
         if not os.path.exists(self.CREDENTIALS_file_path):
             logger.info("未找到配置文件，正在创建默认配置...")
             self.create_local_credentials_file()
-        
+
         # 使用importlib动态导入模块
         try:
             spec = importlib.util.spec_from_file_location("local_credentials", self.CREDENTIALS_file_path)
@@ -148,7 +150,7 @@ class CredentialManager:
         返回:
             str: 配置文件的完整路径
         """
-        
+
         return os.path.join(self.task_folder, 'config', 'local_credentials.py')
 
     def _encrypt(self, data):
@@ -186,7 +188,7 @@ class CredentialManager:
             # 🛠️ 明确处理填充错误
             raise ValueError("Invalid data padding") from e
 
-    def get(self, key:str, default=None):
+    def get(self, key: str, default=None):
         """
         获取指定凭证项的值（自动处理解密）
 
@@ -222,7 +224,7 @@ class CredentialManager:
             logger.error(f"获取凭证失败，key={key}: {str(e)}")
             return default
 
-    def set(self, key:str, value:any):
+    def set(self, key: str, value: any):
         """
         设置凭证项的值（敏感数据自动处理加密存储）
 

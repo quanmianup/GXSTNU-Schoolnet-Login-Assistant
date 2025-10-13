@@ -33,13 +33,13 @@ if __name__ == "__main__":
     max_attempts = 5
     # 尝试间隔时间（秒）
     attempt_interval = 1
-    
+
     for i in range(max_attempts):
         try:
             # 执行登录操作
             # 注意：这里使用的是默认凭证，需要提前通过主程序保存
             login_result = networkmanager.login()
-            
+
             # 检查登录是否成功
             if isinstance(login_result, tuple) and login_result[0]:
                 # 登录成功，退出循环
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         except Exception as e:
             # 捕获异常，继续下一次尝试
             pass
-        
+
         # 如果不是最后一次尝试，则等待一段时间后再试
         if i < max_attempts - 1:
             time.sleep(attempt_interval)

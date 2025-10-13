@@ -17,10 +17,11 @@
 3. 运行此脚本: python build_main_ui.py
 """
 import os
-import sys
 import shutil
 import subprocess
+import sys
 from pathlib import Path
+
 
 # Windows 终端颜色支持
 class ConsoleColors:
@@ -29,6 +30,7 @@ class ConsoleColors:
     YELLOW = '\033[93m'
     RED = '\033[91m'
     ENDC = '\033[0m'  # 重置颜色
+
 
 # 确保在Windows上启用ANSI颜色支持
 if os.name == 'nt':
@@ -62,7 +64,8 @@ def check_pyinstaller():
     """
     pyinstaller_path = shutil.which('pyinstaller')
     if not pyinstaller_path:
-        print(f"{ConsoleColors.RED}错误：未找到pyinstaller可执行文件，请先安装pyinstaller：uv pip install pyinstaller{ConsoleColors.ENDC}")
+        print(f"{ConsoleColors.RED}错误：未找到pyinstaller可执行文件，请先安装pyinstaller，安装命令：{ConsoleColors.ENDC}")
+        print(f"{ConsoleColors.YELLOW}uv pip install pyinstaller{ConsoleColors.ENDC}")
         sys.exit(1)
     return pyinstaller_path
 
@@ -82,7 +85,7 @@ def generate_auto_login_script():
                 # 运行build_auto_login.py来生成AutoLoginScript.exe
                 print(f"{ConsoleColors.YELLOW}运行脚本: {build_auto_login_script}{ConsoleColors.ENDC}")
                 subprocess.run([sys.executable, str(build_auto_login_script)], check=True, cwd=str(project_root))
-                
+
                 if AutoLoginScriptExe.exists():
                     print(f"{ConsoleColors.GREEN}AutoLoginScript.exe生成成功。{ConsoleColors.ENDC}")
                     return True
@@ -90,7 +93,8 @@ def generate_auto_login_script():
                     print(f"{ConsoleColors.RED}生成AutoLoginScript.exe失败{ConsoleColors.ENDC}")
                     return False
             except subprocess.CalledProcessError as e:
-                print(f"{ConsoleColors.RED}错误：生成AutoLoginScript.exe时出现问题，错误代码: {e.returncode}{ConsoleColors.ENDC}")
+                print(
+                    f"{ConsoleColors.RED}错误：生成AutoLoginScript.exe时出现问题，错误代码: {e.returncode}{ConsoleColors.ENDC}")
                 return False
             except Exception as e:
                 print(f"{ConsoleColors.RED}错误：生成AutoLoginScript.exe时发生异常: {str(e)}{ConsoleColors.ENDC}")
@@ -111,12 +115,12 @@ def clean_cache_files():
         shutil.rmtree(BuildDir, ignore_errors=True)
     except Exception as e:
         print(f"{ConsoleColors.YELLOW}警告：删除build目录时出错: {str(e)}{ConsoleColors.ENDC}")
-    
+
     try:
         SpecFile.unlink()
     except Exception as e:
         print(f"{ConsoleColors.YELLOW}警告：删除spec文件时出错: {str(e)}{ConsoleColors.ENDC}")
-    
+
     print(f"{ConsoleColors.GREEN}临时文件清理完成。{ConsoleColors.ENDC}")
 
 
@@ -137,14 +141,14 @@ def invoke_packaging():
     # 构建PyInstaller命令参数，包括AutoLoginScript.exe作为外部资源
     pyinstaller_args = [
         pyinstaller_path,
-        '--onefile',             # 生成单个可执行文件
-        '--windowed',            # 不显示控制台窗口（GUI应用程序）
-        f'--name={ProjectName}', # 可执行文件名称
-        f'--icon={IconFile}',    # 设置应用图标
+        '--onefile',  # 生成单个可执行文件
+        '--windowed',  # 不显示控制台窗口（GUI应用程序）
+        f'--name={ProjectName}',  # 可执行文件名称
+        f'--icon={IconFile}',  # 设置应用图标
         f'--distpath={DistDir}',
         f'--workpath={BuildDir}',
         '--log-level=WARN',
-        '--clean',              # 清理PyInstaller缓存
+        '--clean',  # 清理PyInstaller缓存
         # 使用--add-data参数包含AutoLoginScript.exe作为外部资源
         f'--add-data={str(AutoLoginScriptExe)};.',
         f'--add-data={str(pyproject_file)};.',
@@ -164,21 +168,22 @@ def invoke_packaging():
         '--hidden-import=loguru',
         str(SourceScript)
     ]
-    
+
     print(f"{ConsoleColors.GREEN}正在使用PyInstaller打包: {SourceScript}{ConsoleColors.ENDC}")
     print(f"{ConsoleColors.YELLOW}命令: {' '.join(pyinstaller_args)}{ConsoleColors.ENDC}")
-    
+
     try:
         # 切换到项目根目录执行命令
         original_dir = os.getcwd()
         os.chdir(str(project_root))
-        
+
         subprocess.run(pyinstaller_args, check=True)
-        
+
         # 恢复原始目录
         os.chdir(original_dir)
-        
-        print(f"\n{ConsoleColors.GREEN}打包成功！可执行文件已生成在: {os.path.join(str(DistDir), f'{ProjectName}.exe')}{ConsoleColors.ENDC}")
+
+        print(
+            f"\n{ConsoleColors.GREEN}打包成功！可执行文件已生成在: {os.path.join(str(DistDir), f'{ProjectName}.exe')}{ConsoleColors.ENDC}")
         return True
     except subprocess.CalledProcessError as e:
         print(f"\n{ConsoleColors.RED}打包失败，退出代码: {e.returncode}{ConsoleColors.ENDC}")
@@ -189,6 +194,7 @@ def invoke_packaging():
         os.chdir(original_dir)  # 确保恢复目录
         return False
 
+
 # 主函数
 if __name__ == "__main__":
     """主程序入口，协调整个打包流程
@@ -197,14 +203,14 @@ if __name__ == "__main__":
     3. 清理临时文件
     """
     print(f"{ConsoleColors.GREEN}GXSTNU校园网登录助手 - 主程序打包脚本{ConsoleColors.ENDC}")
-    
+
     # 检查并生成AutoLoginScript.exe
     auto_login_generated = generate_auto_login_script()
-    
+
     if auto_login_generated:
         # 执行打包
         packaging_success = invoke_packaging()
-        
+
         # 如果打包成功，清理缓存文件
         if packaging_success:
             clean_cache_files()

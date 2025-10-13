@@ -16,10 +16,11 @@
 3. 运行此脚本: python build_auto_login.py
 """
 import os
-import sys
 import shutil
 import subprocess
+import sys
 from pathlib import Path
+
 
 # Windows 终端颜色支持
 class ConsoleColors:
@@ -28,6 +29,7 @@ class ConsoleColors:
     YELLOW = '\033[93m'
     RED = '\033[91m'
     ENDC = '\033[0m'  # 重置颜色
+
 
 # 确保在Windows上启用ANSI颜色支持
 if os.name == 'nt':
@@ -46,7 +48,7 @@ def clean_cache_files(build_dir, spec_file):
         spec_file (Path): PyInstaller生成的.spec配置文件路径
     """
     print(f"\n{ConsoleColors.GREEN}正在清理临时文件...{ConsoleColors.ENDC}")
-    
+
     shutil.rmtree(build_dir)
     spec_file.unlink()
 
@@ -65,7 +67,8 @@ def invoke_packaging():
     project_root = script_dir.parent.parent
     pyinstaller_path = shutil.which('pyinstaller')
     if not pyinstaller_path:
-        print(f"{ConsoleColors.RED}错误：未找到pyinstaller可执行文件，请先安装pyinstaller：uv pip install pyinstaller{ConsoleColors.ENDC}")
+        print(
+            f"{ConsoleColors.RED}错误：未找到pyinstaller可执行文件，请先安装pyinstaller：uv pip install pyinstaller{ConsoleColors.ENDC}")
         sys.exit(1)
     # 定义打包参数
     source_script = project_root / 'src' / 'core' / 'AutoLoginScript.py'
@@ -73,20 +76,20 @@ def invoke_packaging():
     build_dir = project_root / 'build'
     spec_file = project_root / 'AutoLoginScript.spec'
     icon_file = project_root / 'assets' / 'images' / 'main_icon.ico'
-    
+
     # 构建PyInstaller命令参数
     pyinstaller_args = [
         pyinstaller_path,
-        '--onefile',              # 生成单个可执行文件
-        '--console',              # 显示控制台窗口，用于输出日志
-        '--name=AutoLoginScript', # 可执行文件名称
+        '--onefile',  # 生成单个可执行文件
+        '--console',  # 显示控制台窗口，用于输出日志
+        '--name=AutoLoginScript',  # 可执行文件名称
         '--log-level=WARN',
-        '--icon', str(icon_file), # 设置应用图标（使用.ico格式）
+        '--icon', str(icon_file),  # 设置应用图标（使用.ico格式）
         '--distpath', str(dist_dir),
         '--workpath', str(build_dir),
-        '--upx-dir=upx',          # 添加UPX压缩支持
+        '--upx-dir=upx',  # 添加UPX压缩支持
         '--upx-exclude=vcruntime140.dll',  # 某些DLL不适合压缩
-        '--exclude-module=tkinter',        # 排除未使用的模块
+        '--exclude-module=tkinter',  # 排除未使用的模块
         '--exclude-module=PIL',
         '--exclude-module=numpy',
         # 添加隐藏的导入以确保所有依赖都被包含在可执行文件中
@@ -97,24 +100,25 @@ def invoke_packaging():
         '--hidden-import=loguru',
         str(source_script)
     ]
-    
+
     print(f"{ConsoleColors.GREEN}正在使用PyInstaller打包: {source_script}{ConsoleColors.ENDC}")
     print(f"{ConsoleColors.YELLOW}命令: \n{' '.join(pyinstaller_args)}{ConsoleColors.ENDC}")
-    
+
+    original_dir: str = os.getcwd()
     try:
         # 切换到项目根目录执行命令
-        original_dir = os.getcwd()
         os.chdir(str(project_root))
         print(f"{ConsoleColors.GREEN}正在打包中...{ConsoleColors.ENDC}")
         subprocess.run(pyinstaller_args, check=True)
         # 恢复原始目录
         os.chdir(original_dir)
-        
-        print(f"\n{ConsoleColors.GREEN}打包成功！可执行文件已生成在: {dist_dir / 'AutoLoginScript.exe'}{ConsoleColors.ENDC}")
-        
+
+        print(
+            f"\n{ConsoleColors.GREEN}打包成功！可执行文件已生成在: {dist_dir / 'AutoLoginScript.exe'}{ConsoleColors.ENDC}")
+
         # 清理临时文件
         clean_cache_files(build_dir, spec_file)
-        
+
         return True
     except subprocess.CalledProcessError as e:
         print(f"{ConsoleColors.RED}错误：打包过程中出现问题，错误代码: {e.returncode}{ConsoleColors.ENDC}")
@@ -124,6 +128,7 @@ def invoke_packaging():
         print(f"{ConsoleColors.RED}错误：打包过程中发生异常: {str(e)}{ConsoleColors.ENDC}")
         os.chdir(original_dir)  # 确保恢复目录
         return False
+
 
 # 主函数
 if __name__ == "__main__":

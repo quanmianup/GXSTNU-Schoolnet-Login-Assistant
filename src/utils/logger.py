@@ -5,10 +5,12 @@
 提供日志配置、输出和界面显示功能
 使用loguru库实现灵活的日志管理系统
 """
-import sys
 import os
+import sys
+
 from PySide6.QtCore import QMetaObject, Qt, Q_ARG
 from loguru import logger
+
 from src.core.Credentials import credentials
 from src.core.TaskScheduler import TaskScheduler
 
@@ -16,12 +18,13 @@ from src.core.TaskScheduler import TaskScheduler
 LOG_LEVEL = "DEBUG"  # 日志级别
 LOG_ROTATION = "10 MB"  # 每个日志文件最大 10MB
 LOG_FORMAT = (
-    "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>"\
+    "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>"
     "{line}</cyan> - <level>{message}</level>")
 
 # 全局变量，用于存储界面日志控件和处理器的引用
 _ui_log_widget = None  # Qt界面的日志显示控件
 _ui_log_handler = None  # 界面日志处理器
+
 
 class QTextBrowserSink:
     """
@@ -43,16 +46,16 @@ class QTextBrowserSink:
         >>> sink = QTextBrowserSink(text_browser)
         >>> logger.add(sink=sink, level="INFO")
     """
-    
+
     # 日志级别到HTML颜色的映射
     LEVEL_COLORS = {
         'DEBUG': '#6495ED',  # 蓝色
-        'INFO': '#008000',   # 绿色
-        'WARNING': '#FFA500', # 橙色
+        'INFO': '#008000',  # 绿色
+        'WARNING': '#FFA500',  # 橙色
         'ERROR': '#FF0000',  # 红色
-        'CRITICAL': '#8B0000' # 深红色
+        'CRITICAL': '#8B0000'  # 深红色
     }
-    
+
     def __init__(self, text_browser):
         """
         初始化QTextBrowserSink实例
@@ -62,7 +65,7 @@ class QTextBrowserSink:
         """
         self.text_browser = text_browser
         self.text_browser.setAcceptRichText(True)  # 确保文本浏览器支持HTML
-    
+
     def write(self, message):
         """
         向界面控件写入日志消息，支持彩色显示
@@ -85,7 +88,7 @@ class QTextBrowserSink:
                 if len(parts) == 2:
                     level_part = parts[0].replace('LEVEL:', '').strip()
                     log_content = parts[1].strip()
-                    
+
                     # 获取当前级别的颜色并创建HTML格式的消息
                     log_color = self.LEVEL_COLORS.get(level_part, '#000000')  # 默认黑色
                     html_message = f'<span style="color: {log_color};">{log_content}</span>'
@@ -93,18 +96,17 @@ class QTextBrowserSink:
                     html_message = message
             else:
                 html_message = message
-            
             # 确保在主线程更新UI
             QMetaObject.invokeMethod(
                 self.text_browser,
                 "append",
-                Qt.QueuedConnection,
+                Qt.ConnectionType.QueuedConnection,
                 Q_ARG(str, html_message)
             )
         except Exception:
             # 如果界面更新失败，静默忽略
             pass
-    
+
     def flush(self):
         """
         flush方法(保持与Python标准io兼容)
@@ -139,11 +141,11 @@ def setup_logger(username=None, log_widget=None):
         >>> setup_logger(username="user123", log_widget=text_browser)
     """
     global _ui_log_widget, _ui_log_handler
-    
+
     # 更新UI日志控件引用
     if log_widget is not None:
         _ui_log_widget = log_widget
-    
+
     # 设置用户名和日志文件路径
     username = username or credentials.get("username", "default")
     log_file_name = f"{username}.log"
@@ -156,7 +158,7 @@ def setup_logger(username=None, log_widget=None):
 
     # 完全重置日志系统
     logger.remove()  # 移除所有现有的处理器
-    
+
     # 添加控制台输出（彩色）- 仅当stdout可用时
     try:
         if sys.stdout is not None:
@@ -168,7 +170,7 @@ def setup_logger(username=None, log_widget=None):
                 backtrace=True,
                 diagnose=True
             )
-    except Exception as e:
+    except Exception:
         # 在无控制台环境中，控制台输出可能会失败
         pass
 
@@ -192,7 +194,7 @@ def setup_logger(username=None, log_widget=None):
             log_content = record["message"]
             # 保存原始消息和级别信息，供write方法使用
             return f"LEVEL:{log_level}|[{log_time}] {log_content}\n"
-        
+
         # 创建QTextBrowserSink实例并添加界面日志接收器
         ui_sink = QTextBrowserSink(_ui_log_widget)
         _ui_log_handler = logger.add(
@@ -203,7 +205,7 @@ def setup_logger(username=None, log_widget=None):
             backtrace=False,  # 不显示回溯信息，保持界面日志简洁
             diagnose=False  # 不显示诊断信息
         )
-        
+
         # 如果是首次设置UI日志或更换了日志控件，发送初始化成功日志
         if log_widget is not None:
             logger.info("界面日志系统已初始化成功")
@@ -216,7 +218,6 @@ try:
     setup_logger()
 except FileNotFoundError as e:
     print(f"日志初始化失败: {e}")
-
 
 # 导出logger实例供其他模块调用
 __all__ = ["logger", "setup_logger"]

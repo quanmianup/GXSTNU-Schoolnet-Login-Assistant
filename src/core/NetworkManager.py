@@ -35,13 +35,14 @@ disconnect_success = networkmanager.dislogin()
 disconnect_success = networkmanager.dislogin(username="user123")
 ```
 """
-from urllib.parse import urlparse, parse_qs
-import requests
 import time
+from urllib.parse import urlparse, parse_qs
 
-from src.utils.logger import logger
+import requests
+
 # 导入配置
 from src.core.Credentials import credentials
+from src.utils.logger import logger
 
 
 class NetworkManager:
@@ -126,7 +127,7 @@ class NetworkManager:
         self.MAX_RETRY = credentials.get("MAX_RETRY")
         self.AUTH_DOMAIN = credentials.get("AUTH_DOMAIN")
         self.RETRY_INTERVAL = credentials.get("RETRY_INTERVAL")
-        
+
         # # 添加网络状态跟踪变量，用于控制错误日志只在状态变化时显示
         # self._last_network_status = None  # None: 未初始化, True: 网络在线, False: 网络离线
         # 
@@ -149,7 +150,7 @@ class NetworkManager:
             response = requests.get(url=self.TEST_URL, headers=headers, timeout=self.RETRY_INTERVAL)
             # 判断状态码是否为 200 且响应 URL 不包含认证域名
             is_connected = response.status_code == 200 and self.AUTH_DOMAIN not in response.url
-            
+
             # 跟踪网络状态变化，只在状态变化时输出日志
             if not is_connected:
                 # if self._last_network_status is not False:
@@ -185,7 +186,7 @@ class NetworkManager:
         """
         try:
             # 发送 GET 请求获取认证相关信息
-            response = requests.get(self.BASE_URL, timeout=self.RETRY_INTERVAL)
+            response = requests.get(url=self.BASE_URL, timeout=self.RETRY_INTERVAL)
             # 解析响应 URL
             parsed_url = urlparse(response.url)
             # 解析 URL 中的查询参数
@@ -193,7 +194,7 @@ class NetworkManager:
             # 安全地获取参数值
             ip = query_params.get('wlanuserip', [''])[0] if isinstance(query_params.get('wlanuserip'), list) else ''
             mac = query_params.get('mac', [''])[0] if isinstance(query_params.get('mac'), list) else ''
-            
+
             # 检查必要参数是否获取成功
             if not ip or not mac:
                 # 只在状态变化时记录错误
@@ -203,12 +204,12 @@ class NetworkManager:
                 return None
             # 更新状态为成功
             # self._last_auth_params_status = True
-            
+
             return {
                 'login': f'https://{self.AUTH_DOMAIN}/webauth.do?wlanacip=172.16.1.82&wlanuserip={ip}&mac={mac}',
                 'disconnect': f'https://{self.AUTH_DOMAIN}/webdisconn.do?wlanacip=172.16.1.82&wlanuserip={ip}&mac={mac}',
                 'check': f'https://{self.AUTH_DOMAIN}/getAuthResult.do',
-            } 
+            }
         except requests.exceptions.Timeout:
             # 只在状态变化时记录错误
             # if self._last_get_auth_urls_status != "timeout":
@@ -292,7 +293,7 @@ class NetworkManager:
         """
         username = self.USERNAME if username is None else username
         password = self.PASSWORD if password is None else password
-        
+
         # 验证用户名和密码
         if not username or not password:
             # 只在状态变化时记录错误
@@ -302,12 +303,12 @@ class NetworkManager:
             return False
         # 更新状态为成功
         # self._last_empty_credentials_status = True
-            
+
         # 获取认证URLs
         auth_urls = self.get_auth_urls()
         if auth_urls is None:
             return False
-        
+
         # 获取登录 URL
         login_url = auth_urls['login']
         # 获取登录请求数据体
@@ -316,7 +317,7 @@ class NetworkManager:
         check_url = auth_urls['check']
         # 获取检查状态请求数据体
         check_data = self.get_data(username, password)['check']
-        
+
         # 检查账号在线状态
         try:
             check_response = requests.get(url=check_url, data=check_data, timeout=self.RETRY_INTERVAL)
@@ -329,7 +330,7 @@ class NetworkManager:
                     logger.warning(f"{username}账号下线失败，继续登录流程")
         except Exception as e:
             logger.warning(f"检查账号在线状态时发生异常: {str(e)}，继续登录流程")
-            
+
         logger.info(f'正在尝试登录校园网账号: {username}')
 
         for attempt in range(1, self.MAX_RETRY + 1):
@@ -339,7 +340,7 @@ class NetworkManager:
                 # 等待一段时间后检查登录状态
                 time.sleep(self.RETRY_INTERVAL)
                 check_response = requests.post(url=check_url, data=check_data, timeout=self.RETRY_INTERVAL)
-                
+
                 if check_response.status_code == 200:
                     if '运营商网络拨号成功' in check_response.text and self.check_network():
                         logger.info(f'登录成功: {username}')
@@ -367,7 +368,7 @@ class NetworkManager:
             bool: 登出成功返回 True，登出失败返回 False。
         """
         username = self.USERNAME if username is None else username
-        
+
         # 验证用户名
         if not username:
             # 只在状态变化时记录错误
@@ -377,7 +378,7 @@ class NetworkManager:
             return False
         # 更新状态为成功
         # self._last_empty_credentials_status = True
-            
+
         # 获取认证URLs
         auth_urls = self.get_auth_urls()
         if auth_urls is None:
@@ -388,9 +389,9 @@ class NetworkManager:
         logout_data = self.get_data(username)['disconnect']
         # 获取登出 URL
         disconnect_url = auth_urls['disconnect']
-        
+
         logger.info(f'正在尝试登出校园网账号: {username}')
-        
+
         for attempt in range(1, self.MAX_RETRY + 1):
             try:
                 # 发送登出请求
@@ -407,7 +408,7 @@ class NetworkManager:
                 logger.warning(f'第 {attempt} 次登出请求连接失败')
             except Exception as e:
                 logger.warning(f'第 {attempt} 次登出过程中发生异常: {str(e)}')
-        
+
         # 只在状态变化时记录错误
         error_msg = f"{username}登出失败：请检查账号密码是否正确，或先手动下线已登录的账号"
         # if self._last_logout_fail_status != error_msg:

@@ -46,10 +46,11 @@ print(message)
 """
 import os
 import subprocess
-import logging
 from pathlib import Path
-from src.utils.logger import logger
+
 from PySide6.QtCore import QTime
+
+from src.utils.logger import logger
 
 if os.name == 'nt':
     try:
@@ -67,7 +68,7 @@ class TaskScheduler:
     - task_folder_name: 计划任务在Windows任务计划程序中的文件夹名称
     - task_folder: 程序相关文件在用户文档目录下的存储路径
     """
-    
+
     def __init__(self):
         """
         初始化TaskScheduler实例
@@ -77,7 +78,7 @@ class TaskScheduler:
         """
         self.task_prefix = "FileScheduler_"
         self.task_folder = Path(os.environ['SYSTEMDRIVE'], os.sep, "ScheduledTasks").resolve()
- 
+
     def get_full_task_name(self, original_name):
         """
         获取任务的完整名称（包含路径）
@@ -90,7 +91,7 @@ class TaskScheduler:
         
         """
         return f"{self.task_prefix}{original_name}"
-    
+
     def create_task(self, file_path):
         """
         创建计划任务，设置为开机自动执行指定文件
@@ -109,7 +110,7 @@ class TaskScheduler:
         try:
             time_str = QTime.currentTime().toString("HH:mm:ss")
             cmd = [
-                "schtasks", "/Create", 
+                "schtasks", "/Create",
                 "/TN", task_name,
                 "/TR", file_path,
                 "/SC", "DAILY",
@@ -118,8 +119,8 @@ class TaskScheduler:
             ]
 
             # 添加creationflags参数来隐藏控制台窗口，不使用text=True避免编码问题
-            subprocess.run(cmd, capture_output=True, check=True, 
-                          creationflags=CREATE_NO_WINDOW if os.name == 'nt' else 0)
+            subprocess.run(cmd, capture_output=True, check=True,
+                           creationflags=CREATE_NO_WINDOW if os.name == 'nt' else 0)
             return True, file_name
         except subprocess.CalledProcessError as e:
             err_msg = e.stderr.decode('cp936', errors='replace') if e.stderr else str(e)
@@ -138,11 +139,11 @@ class TaskScheduler:
         """
         try:
             list_cmd = ["schtasks", "/Query", "/FO", "LIST", "/V"]
-            
+
             # 在Windows系统上使用系统默认编码（通常是CP936或GBK）而不是强制使用UTF-8
             # 添加creationflags参数来隐藏控制台窗口
             task_names_list_result = subprocess.run(
-                list_cmd, capture_output=True, shell=False, 
+                list_cmd, capture_output=True, shell=False,
                 creationflags=CREATE_NO_WINDOW if os.name == 'nt' else 0
             )
 
@@ -160,7 +161,7 @@ class TaskScheduler:
         except Exception as e:
             err_msg = str(e)
             return False, err_msg
-    
+
     @staticmethod
     def delete_task(full_task_name):
         """
@@ -197,7 +198,6 @@ class TaskScheduler:
             err_msg = str(e)
             logger.error(f"删除任务时发生未知错误: {err_msg}")
             return False, err_msg
-    
 
     def _get_task_details(self, task_text: str):
         """
@@ -215,14 +215,14 @@ class TaskScheduler:
         task_start = False
         tasks = []
         current_task = {
-                "name": '',
-                "next_run": '',
-                "status": '',
-                "filepath": ''
+            "name": '',
+            "next_run": '',
+            "status": '',
+            "filepath": ''
         }
         for line in task_text.split('\r\n'):
             line = line.strip()
-            if line.startswith(("TaskName","任务名")):
+            if line.startswith(("TaskName", "任务名")):
                 task_name = line.split(":", 1)[1].strip().replace("\\", "")
                 if task_name.startswith(self.task_prefix):
                     task_start = True
@@ -249,7 +249,6 @@ class TaskScheduler:
                 }
                 task_start = False
         return tasks
-
 
 
 # 创建TaskScheduler全局实例，供其他模块直接使用

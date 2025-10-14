@@ -43,9 +43,11 @@ if need_to_cancel_all:
 ```
 """
 from concurrent.futures import ThreadPoolExecutor, Future
-from src.utils.logger import logger
 from typing import Callable, Dict
+
 from PySide6.QtCore import QObject, Signal
+
+from src.utils.logger import logger
 
 
 class AsyncTaskExecutor(QObject):
@@ -106,7 +108,7 @@ class AsyncTaskExecutor(QObject):
         # 生成唯一任务ID
         task_id = f"{op_type}_{self.task_counter}"
         self.task_counter += 1
-        
+
         try:
             # 提交任务到线程池
             future = self.thread_pool.submit(self._run_task, func, op_type)
@@ -173,7 +175,7 @@ class AsyncTaskExecutor(QObject):
         # 转义可能导致loguru颜色解析错误的字符
         task_name = task_name.replace('<', '\<').replace('>', '\>')
         # logger.info(f"[任务执行] 开始执行: {task_name}, 操作类型: {op_type}")
-        
+
         try:
             # 包装成(success, message, op_type)格式
             return True, func(), op_type

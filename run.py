@@ -4,8 +4,8 @@
 项目主入口文件
 负责启动图形界面程序并设置必要的环境
 """
-import sys
 import os
+import sys
 
 # ==========解决No module named 'window_rc'问题==================
 # 将src/gui目录添加到Python搜索路径的前面
@@ -34,4 +34,3 @@ if __name__ == "__main__":
     - 确保项目的所有依赖包已正确安装
     """
     run()
-    

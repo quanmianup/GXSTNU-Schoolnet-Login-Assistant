@@ -27,32 +27,38 @@ $SpecFile = "$ProjectRoot\AutoLoginScript.spec"
 $IconFile = "$ProjectRoot\assets\images\main_icon.ico"
 
 # Function to clean up cache files
-function Remove-CacheFiles {
+function Remove-CacheFiles
+{
     param()
-    
+
     Write-Host "`nCleaning up cache files..." -ForegroundColor Green
-    
+
     Remove-Item -Path $BuildDir -Recurse -Force -ErrorAction SilentlyContinue
     Remove-Item -Path $SpecFile -Force -ErrorAction SilentlyContinue
-    
+
     Write-Host "Cache files cleaned up successfully." -ForegroundColor Green
 }
 
 # Check prerequisites
-function Test-Prerequisites {
+function Test-Prerequisites
+{
     param()
-    
+
     # Check if running in virtual environment
     $VenvPath = "$ProjectRoot\.venv"
-    if (-not (Test-Path -Path $VenvPath)) {
+    if (-not (Test-Path -Path $VenvPath))
+    {
         Write-Host "Warning: It is recommended to run this packaging script in a virtual environment." -ForegroundColor Yellow
     }
-    
+
     # Check if pyinstaller is installed
-    try {
+    try
+    {
         Get-Command -Name 'pyinstaller' -ErrorAction Stop | Out-Null
         return $true
-    } catch {
+    }
+    catch
+    {
         Write-Host "Error: pyinstaller executable not found, please install pyinstaller first." -ForegroundColor Red
         Write-Host "Please run: uv pip install pyinstaller" -ForegroundColor Yellow
         return $false
@@ -60,13 +66,14 @@ function Test-Prerequisites {
 }
 
 # Main packaging function
-function Invoke-Packaging {
+function Invoke-Packaging
+{
     param()
-    
+
     # Build PyInstaller command
     $PyInstallerArgs = @(
-        '--onefile',         
-        '--console',      
+        '--onefile',
+        '--console',
         '--clean',
         '--name=AutoLoginScript',
         "--icon=$IconFile",
@@ -78,38 +85,46 @@ function Invoke-Packaging {
         '--hidden-import=loguru',
         "$SourceScript"
     )
-    
+
     Write-Host "Packaging $SourceScript with PyInstaller..." -ForegroundColor Green
-    Write-Host "Command:`npyinstaller $($PyInstallerArgs -join ' ')" -ForegroundColor Yellow
-    
-    try {
+    Write-Host "Command:`npyinstaller $( $PyInstallerArgs -join ' ' )" -ForegroundColor Yellow
+
+    try
+    {
         # Change to project root directory to execute command
         Push-Location -Path $ProjectRoot
-        
+
         Write-Host "Packaging Now... " -ForegroundColor Cyan
         # Use Start-Process for more reliable execution
         $ProcessInfo = Start-Process -FilePath 'pyinstaller' -ArgumentList $PyInstallerArgs -NoNewWindow -Wait -PassThru
         Pop-Location
-        
-        if ($ProcessInfo.ExitCode -eq 0) {
+
+        if ($ProcessInfo.ExitCode -eq 0)
+        {
             Write-Host "`nPackaging successful! Generated file: $DistDir\AutoLoginScript.exe" -ForegroundColor Green
             return $true
-        } else {
-            Write-Host "`nPackaging failed with exit code: $($ProcessInfo.ExitCode)" -ForegroundColor Red
+        }
+        else
+        {
+            Write-Host "`nPackaging failed with exit code: $( $ProcessInfo.ExitCode )" -ForegroundColor Red
             return $false
         }
-    } catch {
+    }
+    catch
+    {
         Write-Host "Error: Problem occurred during packaging: $_" -ForegroundColor Red
         return $false
     }
 }
 
 # Main script execution
-if (Test-Prerequisites) {
+if (Test-Prerequisites)
+{
     $packagingSuccess = Invoke-Packaging
-    
+
     # Clean cache files regardless of packaging success
-    if ($packagingSuccess) {
+    if ($packagingSuccess)
+    {
         Remove-CacheFiles
     }
 }

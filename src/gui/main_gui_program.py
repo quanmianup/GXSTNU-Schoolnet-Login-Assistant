@@ -28,19 +28,21 @@ import os
 import shutil
 import subprocess
 import sys
-import webbrowser
 import tomllib
+import webbrowser
+
 import requests
 from PySide6.QtCore import Qt, QPoint, QTime, QEvent, QTimer, QMetaObject, Q_ARG
-from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QTableWidgetItem, QDialog, QDialogButtonBox
+from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox, QFileDialog, QTableWidgetItem, QDialog, \
+    QDialogButtonBox
 
 from src.core.AsyncTaskExecutor import AsyncTaskExecutor
-from src.core.NetworkManager import networkmanager
-from src.gui.main_ui import Ui_MainWindow
-from src.gui.PswdInput_ui import Ui_Dialog
-from src.utils.logger import logger, setup_logger
-from src.core.TaskScheduler import TaskScheduler
 from src.core.Credentials import credentials
+from src.core.NetworkManager import networkmanager
+from src.core.TaskScheduler import TaskScheduler
+from src.gui.PswdInput_ui import Ui_Dialog
+from src.gui.main_ui import Ui_MainWindow
+from src.utils.logger import logger, setup_logger
 
 
 class MainWindow(QMainWindow):
@@ -73,6 +75,7 @@ class MainWindow(QMainWindow):
         - 设置窗口拖动功能
         """
         super().__init__()
+        self._last_network_status = False
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.setWindowFlag(Qt.FramelessWindowHint)
@@ -80,30 +83,30 @@ class MainWindow(QMainWindow):
         self.ui.lineEdit_username.setText(credentials.get('username', ''))
         self.ui.lineEdit_password.setText(credentials.get('password', ''))
         self.ui.label_black_message.setText("")
-        
+
         # 从配置中加载启动时检查更新的状态
         check_update_status = credentials.get('UPDATE_ON_START', True)
         self.ui.checkBox_update.setChecked(check_update_status)
         # 连接checkBox_update的状态变化信号，实现持久化保存
         self.ui.checkBox_update.stateChanged.connect(
-            lambda :self._save_check_update_state())
-        
+            lambda: self._save_check_update_state())
+
         # 设置关于页面的内容
         self.set_about_text()
 
         self.task_manager = TaskScheduler()
         self.task_executor = AsyncTaskExecutor()
         self.task_executor.finished.connect(self.handle_general_finished)
-        
+
         # 初始化保活功能相关变量
         self.keep_alive_timer = QTimer(self)
         self.keep_alive_timer.setInterval(5000)  # 5秒
         self.keep_alive_timer.timeout.connect(self._check_network_status_and_update_tabwiget)
         self.keep_alive_timer.start()
-        
+
         # 设置界面日志输出，连接到右侧的日志控件
         setup_logger(log_widget=self.ui.textBrowser_log)
-        
+
         # 设置日志控件的右键清空日志菜单
         self.setup_log_context_menu()
 
@@ -115,12 +118,11 @@ class MainWindow(QMainWindow):
 
         # 为标题栏添加事件过滤器
         self.ui.frame_title.installEventFilter(self)
-        
-        
+
         # 检查是否在启动时检查更新
         if check_update_status:
             self.check_for_updates()
-    
+
     def _init_ui_connect_(self):
         """
         初始化 UI 组件的事件连接。
@@ -132,8 +134,8 @@ class MainWindow(QMainWindow):
         self.ui.select_file_btn.clicked.connect(self.select_file)
         self.ui.create_btn.clicked.connect(self.create_task)
         self.ui.query_btn.clicked.connect(
-            lambda: (self.query_tasks(), 
-            QMessageBox.information(self, "提示", "查询任务成功")))
+            lambda: (self.query_tasks(),
+                     QMessageBox.information(self, "提示", "查询任务成功")))
         self.ui.delete_btn.clicked.connect(self.delete_task)
         self.ui.pushButton_generate.clicked.connect(self.create_exe)
         self.ui.task_table.setColumnCount(4)
@@ -151,20 +153,20 @@ class MainWindow(QMainWindow):
                 self.ui.stackedWidget_tab.setCurrentIndex(1),
                 self.ui.time_edit.setTime(QTime.currentTime()),
                 self.query_tasks()
-        ))
+            ))
         self.ui.pushButton_tab_other.clicked.connect(lambda: self.ui.stackedWidget_tab.setCurrentIndex(2))
         self.ui.pushButton_help.clicked.connect(lambda: self.ui.stackedWidget_other.setCurrentIndex(0))
         self.ui.pushButton_update.clicked.connect(
             lambda: (
-            self.ui.stackedWidget_other.setCurrentIndex(1),
-            self.check_for_updates(from_button=True),
-        ))
+                self.ui.stackedWidget_other.setCurrentIndex(1),
+                self.check_for_updates(from_button=True),
+            ))
         self.ui.pushButton_disclaimer.clicked.connect(lambda: self.ui.stackedWidget_other.setCurrentIndex(2))
         self.ui.pushButton_about.clicked.connect(lambda: self.ui.stackedWidget_other.setCurrentIndex(3))
 
         # 连接保活按钮信号
         self.ui.pushButton_keeplogin.clicked.connect(self._toggle_keep_network_online)
-        
+
     def eventFilter(self, obj, event):
         """
         事件过滤器，处理标题栏的鼠标事件以实现窗口拖动。
@@ -188,7 +190,7 @@ class MainWindow(QMainWindow):
                 if event.button() == Qt.LeftButton:
                     self.dragging = False
         return super().eventFilter(obj, event)
-    
+
     def check_for_updates(self, from_button=False):
         """
         检查应用程序是否有更新。
@@ -203,6 +205,7 @@ class MainWindow(QMainWindow):
         """
         try:
             logger.info("正在检查更新...")
+            self.ui.pushButton_update.setEnabled(False)
             # 显示进度条并重置进度，使用主线程更新方法
             self._update_progress_bar(20)
             # 在异步任务中执行网络请求，避免阻塞UI
@@ -216,7 +219,7 @@ class MainWindow(QMainWindow):
             # 确保进度条重置为0
             self._update_progress_bar(0)
             QMessageBox.critical(self, "错误", f"检查更新失败: {str(e)}")
-    
+
     def set_about_text(self):
         """
         设置关于页面的内容，包括版本号、作者信息、代码仓库链接等。
@@ -229,30 +232,33 @@ class MainWindow(QMainWindow):
         version = self._get_current_version()
         if not version:
             version = "error"
-        
+
         # 设置关于页面的内容，使用简单的字符串格式以避免Qt绘画错误
         about_text = "\n"
         about_text += "\n"
         about_text += "\n"
         about_text += "广西科师校园网登录助手\n"
         about_text += f"版本号：v{version}\n"
-        about_text += "作者：quanmianup\n\n"
+        about_text += "作者：quanmianup\n"
+        about_text += "\n"
+        about_text += "代码仓库："
         about_text += "Gitee：https://gitee.com/quanmianup/GXSTNU-Schoolnet-Login-Assistant（主推）\n"
         about_text += "Github：https://github.com/quanmianup/GXSTNU-Schoolnet-Login-Assistant\n\n"
-        about_text += "开源协议：MIT License\n\n"
+        about_text += "开源协议：MIT License\n"
+        about_text += "\n"
         about_text += "本工具仅供学习交流使用"
-        
+
         self.ui.textBrowser_about.setPlainText(about_text)
-    
-    def _get_current_version(self):
+
+    @staticmethod
+    def _get_current_version():
         """
         从pyproject.toml文件中读取当前程序的版本号。
-        
+
         返回:
             str: 当前程序的版本号(如"1.0.0")，如果读取失败则返回None
         """
 
-        
         try:
             # 检查是否在PyInstaller打包后的环境中运行
             if getattr(sys, 'frozen', False):
@@ -261,8 +267,9 @@ class MainWindow(QMainWindow):
                 pyproject_path = os.path.join(sys._MEIPASS, "pyproject.toml")
             else:
                 # 在开发环境中，使用相对路径
-                pyproject_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "pyproject.toml")
-            
+                pyproject_path = os.path.join(
+                    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "pyproject.toml")
+
             with open(pyproject_path, "rb") as f:
                 pyproject_data = tomllib.load(f)
             # 从pyproject.toml中获取版本号
@@ -272,7 +279,7 @@ class MainWindow(QMainWindow):
             logger.error(f"读取pyproject.toml文件失败: {str(e)}")
             # 读取失败时返回默认版本号
             return None
-            
+
     def _update_progress_bar(self, value):
         """
         在主线程中更新进度条，避免Qt绘画错误
@@ -282,12 +289,12 @@ class MainWindow(QMainWindow):
         """
         # 使用QMetaObject.invokeMethod确保UI更新在主线程中执行
         QMetaObject.invokeMethod(
-            self.ui.progressBar, 
-            "setValue", 
+            self.ui.progressBar,
+            "setValue",
             Qt.QueuedConnection,
             Q_ARG(int, value)
         )
-        
+
     def _fetch_latest_version(self):
         """
         从Gitee仓库获取最新版本信息。
@@ -305,7 +312,7 @@ class MainWindow(QMainWindow):
             self._update_progress_bar(50)
             response = requests.get(url, timeout=10, allow_redirects=True)
             response.raise_for_status()
-            
+
             # 从重定向后的URL中提取版本号
             self._update_progress_bar(70)
             redirected_url = response.url
@@ -314,7 +321,7 @@ class MainWindow(QMainWindow):
             latest_version = latest_version
             current_version = self._get_current_version()
             self._update_progress_bar(80)
-            
+
             if not latest_version:
                 self._update_progress_bar(0)
                 return {"success": False, "message": "未找到版本信息"}
@@ -325,21 +332,21 @@ class MainWindow(QMainWindow):
 
             is_newer = self.compare_versions(latest_version, current_version)
             self._update_progress_bar(100)
-            
+
             return {
                 "success": True,
                 "latest_version": latest_version,
                 "current_version": current_version,
                 "is_newer": is_newer
             }
-            
+
         except requests.RequestException as e:
             self._update_progress_bar(0)
             return {"success": False, "message": f"网络请求失败: {str(e)}"}
         except Exception as e:
             self._update_progress_bar(0)
             return {"success": False, "message": f"获取版本信息失败: {str(e)}"}
-    
+
     def _save_check_update_state(self):
         """
         保存启动时检查更新的状态到配置文件中。
@@ -347,7 +354,7 @@ class MainWindow(QMainWindow):
         is_checked = self.ui.checkBox_update.isChecked()
         credentials.set('UPDATE_ON_START', is_checked)
         logger.info(f"已{'启用' if is_checked else '禁用'}启动时检查更新功能")
-            
+
     def _toggle_keep_network_online(self):
         """
         切换保持网络在线功能的开关，记录日志。
@@ -356,7 +363,7 @@ class MainWindow(QMainWindow):
             logger.info("保持网络功能已开启")
         else:
             logger.info("保持网络功能已关闭")
-    
+
     def compare_versions(self, v1, v2):
         """
         比较两个版本号，返回v1是否大于v2。
@@ -371,7 +378,7 @@ class MainWindow(QMainWindow):
         v1_parts = list(map(int, v1.split('.')))
         v2_parts = list(map(int, v2.split('.')))
         return v1_parts > v2_parts
-    
+
     def _check_network_status_and_update_tabwiget(self):
         """
         定期检查网络状态，更新UI显示，并在需要时自动尝试登录。
@@ -382,7 +389,7 @@ class MainWindow(QMainWindow):
         - 在网络离线且保活功能开启时，自动尝试重新登录
         """
         self.task_executor.execute_task(
-            func=lambda: networkmanager.check_network(), 
+            func=lambda: networkmanager.check_network(),
             op_type="keep_alive_check"
         )
 
@@ -391,7 +398,7 @@ class MainWindow(QMainWindow):
         设置日志控件的右键菜单，用于清空日志内容。
         """
         self.ui.menuBar.hide()
-        
+
         # 直接使用lambda表达式显示右键菜单，避免单独的show_log_context_menu方法
         self.ui.textBrowser_log.customContextMenuRequested.connect(
             lambda position: self.ui.menulogMenu.exec_(self.ui.textBrowser_log.mapToGlobal(position))
@@ -435,7 +442,7 @@ class MainWindow(QMainWindow):
         # 确保extra_data是字典
         if extra_data is None:
             extra_data = {}
-        
+
         try:
             if op_type == "login":
                 # 登录结果处理
@@ -446,7 +453,7 @@ class MainWindow(QMainWindow):
                     self.ui.label_red_message.setText("登录失败！")
                     self.ui.stackedWidget_message.setCurrentIndex(2)
                 self.ui.pushButton_login.setEnabled(True)
-            
+
             elif op_type == "dislogin":
                 # 下线结果处理
                 if success and message == True:
@@ -456,7 +463,7 @@ class MainWindow(QMainWindow):
                     self.ui.label_red_message.setText("下线失败")
                     self.ui.stackedWidget_message.setCurrentIndex(2)
                 self.ui.pushButton_dislogin.setEnabled(True)
-            
+
             elif op_type == "create_task":
                 # 创建任务结果处理
                 if isinstance(message, tuple):
@@ -472,13 +479,14 @@ class MainWindow(QMainWindow):
                 else:
                     QMessageBox.critical(self, "错误", f"创建任务失败:\n{str(message[1])}")
                     logger.error(f"创建任务失败: {str(message[1])}")
-            
+
             elif op_type == "query_tasks":
                 # 查询任务结果处理
-                query_success ,task_list = message
+                query_success, task_list = message
                 if query_success:
                     if not isinstance(task_list, list):
-                        logger.error(f"查询任务返回结果不是列表类型，实际类型: {type(task_list).__name__}，结果内容: {task_list}")
+                        logger.error(
+                            f"查询任务返回结果不是列表类型，实际类型: {type(task_list).__name__}，结果内容: {task_list}")
                         QMessageBox.critical(
                             self, "错误", "查询任务返回结果格式错误")
                         return
@@ -500,7 +508,7 @@ class MainWindow(QMainWindow):
                             2: "status",
                             3: "next_run"
                         }
-                        
+
                         for row, task in enumerate(task_list):
                             self.ui.task_table.insertRow(row)
                             for col, key in column_keys.items():
@@ -508,7 +516,7 @@ class MainWindow(QMainWindow):
                                 item.setToolTip(task[key])
                                 self.ui.task_table.setItem(row, col, item)
                         self.ui.task_table.resizeColumnsToContents()
-                        
+
                     except Exception as e:
                         QMessageBox.critical(
                             self, "错误", f"更新任务列表失败:\n{str(e)}")
@@ -516,7 +524,7 @@ class MainWindow(QMainWindow):
                 else:
                     QMessageBox.critical(self, "错误", f"查询任务失败:\n{task_list}")
                     logger.error(f"查询任务失败: {task_list}")
-            
+
             elif op_type == "delete_task":
                 # 删除任务结果处理
                 if isinstance(message, tuple):
@@ -530,29 +538,31 @@ class MainWindow(QMainWindow):
                 else:
                     QMessageBox.critical(self, "错误", f"删除任务失败:\n{delete_message}")
                     logger.error(f"删除任务失败: {delete_message}")
-            
+
             elif op_type == "check_updates":
                 # 检查更新结果处理
                 if success and message and message.get("success"):
                     if message.get("is_newer"):
                         latest_version = message.get("latest_version")
                         current_version = message.get("current_version")
-                        
+
                         logger.info(f"发现新版本: {latest_version}")
-                        
+
                         msg_box = QMessageBox(self)
                         msg_box.setWindowTitle("发现新版本")
-                        msg_box.setText(f"发现新版本 {latest_version}，当前版本 {current_version}\n\n是否前往Gitee查看更新内容？")
+                        msg_box.setText(
+                            f"发现新版本 {latest_version}，当前版本 {current_version}\n\n是否前往Gitee查看更新内容？")
                         msg_box.setIcon(QMessageBox.Information)
-                        
+
                         yes_btn = msg_box.addButton("前往下载", QMessageBox.ActionRole)
                         msg_box.addButton("取消", QMessageBox.RejectRole)
-                        
+
                         msg_box.exec_()
-                        
+
                         if msg_box.clickedButton() == yes_btn:
                             # 打开浏览器访问Gitee仓库
-                            webbrowser.open("https://gitee.com/quanmianup/GXSTNU-Schoolnet-Login-Assistant/releases/latest")
+                            webbrowser.open(
+                                "https://gitee.com/quanmianup/GXSTNU-Schoolnet-Login-Assistant/releases/latest")
                     else:
                         # 已是最新版本
                         logger.info(f"当前已是最新版本 {message.get('current_version')}")
@@ -566,7 +576,7 @@ class MainWindow(QMainWindow):
                     error_msg = message.get("message", "未知错误") if isinstance(message, dict) else str(message)
                     logger.error(f"检查更新失败: {error_msg}")
                     QMessageBox.critical(self, "错误", f"检查更新失败: {error_msg}")
-            
+                self.ui.pushButton_update.setEnabled(True)
             elif op_type == "keep_alive_check":
                 # 网络在线检测结果处理
                 current_time = QTime.currentTime()
@@ -585,15 +595,14 @@ class MainWindow(QMainWindow):
                         # 网络离线，显示失败状态
                         self.ui.stackedWidget_message_netstatus.setCurrentIndex(2)
                         # 更新网络状态记录
-                        self._last_network_status = False
                         # 检查保活按钮是否开启，如果开启则尝试登录,检查当前时间是否在00:00-7:00之间
                         # if self.ui.pushButton_keeplogin.isChecked() :
-                        if self.ui.pushButton_keeplogin.isChecked() and (current_time.hour() <= 24 and current_time.hour() > 7):
+                        if self.ui.pushButton_keeplogin.isChecked() and (7 <= current_time.hour() <= 24):
                             # 在后台线程执行登录尝试
                             username = self.ui.lineEdit_username.text().strip()
                             password = self.ui.lineEdit_password.text().strip()
                             networkmanager.login(username=username, password=password)
-       
+
         except Exception as e:
             logger.error(f"处理异步任务 {op_type} 结果失败: {e}")
             QMessageBox.critical(self, "错误", f"处理异步任务 {op_type} 结果失败: {e}")
@@ -622,7 +631,7 @@ class MainWindow(QMainWindow):
         password = self.ui.lineEdit_password.text().strip()
         # 使用lambda函数绑定参数，直接传递已绑定参数的函数
         self.task_executor.execute_task(
-            func=lambda: networkmanager.login(username, password), 
+            func=lambda: networkmanager.login(username, password),
             op_type="login"
         )
         self.save_credentials()
@@ -645,7 +654,7 @@ class MainWindow(QMainWindow):
         username = self.ui.lineEdit_username.text()
         # 直接传递函数和参数
         self.task_executor.execute_task(
-            func=lambda: networkmanager.dislogin(username), 
+            func=lambda: networkmanager.dislogin(username),
             op_type="dislogin"
         )
         self.save_credentials()
@@ -660,9 +669,9 @@ class MainWindow(QMainWindow):
         - 更新UI中的文件路径和文件名显示
         """
         file_path, _ = QFileDialog.getOpenFileName(
-            parent=self, 
-            caption="选择要执行的文件", 
-            dir=str(self.task_manager.task_folder), 
+            parent=self,
+            caption="选择要执行的文件",
+            dir=str(self.task_manager.task_folder),
             filter="所有文件 (*.*)"
         )
 
@@ -687,11 +696,11 @@ class MainWindow(QMainWindow):
             return
 
         self.task_executor.execute_task(
-            func=lambda: self.task_manager.create_task(file_path), 
+            func=lambda: self.task_manager.create_task(file_path),
             op_type="create_task"
         )
 
-    def query_tasks(self, from_source:str = None):
+    def query_tasks(self, from_source: str = None):
         """
         异步查询计划任务。
         
@@ -700,11 +709,11 @@ class MainWindow(QMainWindow):
         - 结果会通过handle_general_finished方法更新到任务表格中
         """
         self.task_executor.execute_task(
-            func=lambda: self.task_manager.query_tasks(), 
+            func=lambda: self.task_manager.query_tasks(),
             op_type="query_tasks",
             extra_data={"from_source": from_source}
         )
-        
+
     def delete_task(self):
         """
         异步删除计划任务。
@@ -728,7 +737,7 @@ class MainWindow(QMainWindow):
                 QMessageBox.Yes | QMessageBox.No
         ):
             self.task_executor.execute_task(
-                func=lambda: self.task_manager.delete_task(full_task_name), 
+                func=lambda: self.task_manager.delete_task(full_task_name),
                 op_type="delete_task"
             )
 
@@ -758,21 +767,23 @@ class MainWindow(QMainWindow):
             # 定义源EXE文件路径（AutoLoginScript.exe）
             # 使用相对路径或打包时包含的资源路径
             # 首先尝试从当前可执行文件所在目录查找
+
             if getattr(sys, 'frozen', False):
                 # 如果是打包后的exe文件
-                current_dir = os.path.dirname(sys.executable)
-                source_exe_path = os.path.join(current_dir, "AutoLoginScript.exe")
+                source_exe_path = os.path.join(sys._MEIPASS, "AutoLoginScript.exe")
             else:
                 # 如果是开发环境
-                project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-                source_exe_path = os.path.join(project_root, "dist", "AutoLoginScript.exe")
-            
+                source_exe_path = os.path.join(
+                    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "dist",
+                    "AutoLoginScript.exe")
+
             # 确保源文件存在
             if not os.path.exists(source_exe_path):
-                raise FileNotFoundError(f"源EXE文件不存在: {source_exe_path}\n请先运行build_auto_login.ps1脚本生成此文件")
-            
+                raise FileNotFoundError(
+                    f"源EXE文件不存在: {source_exe_path}\n请先运行build_auto_login.ps1脚本生成此文件")
+
             target_exe_path = self.task_manager.task_folder.joinpath("AutoLoginScript.exe")
-            
+
             # 复制文件
             shutil.copy2(source_exe_path, target_exe_path)
             logger.info(f"文件生成成功: {target_exe_path}")
@@ -815,6 +826,7 @@ class PasswordDialog(QDialog):
     属性:
         ui: 对话框UI实例，包含密码输入框和提示信息
     """
+
     def __init__(self, parent=None):
         """
         初始化密码对话框

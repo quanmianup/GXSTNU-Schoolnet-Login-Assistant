@@ -11,8 +11,9 @@ import sys
 from PySide6.QtCore import QMetaObject, Qt, Q_ARG
 from loguru import logger
 
-from src.core.Credentials import credentials
-from src.core.TaskScheduler import TaskScheduler
+# 避免循环导入，使用局部导入
+# from src.core.Credentials import credentials  # 移除直接导入
+# from src.core.TaskScheduler import TaskScheduler  # 移除直接导入
 
 # 日志配置常量
 LOG_LEVEL = "DEBUG"  # 日志级别
@@ -147,11 +148,24 @@ def setup_logger(username=None, log_widget=None):
         _ui_log_widget = log_widget
 
     # 设置用户名和日志文件路径
-    username = username or credentials.get("username", "default")
+    if username is None:
+        try:
+            # 延迟导入，避免循环依赖
+            from src.core.Credentials import credentials
+            username = credentials.get("username", "default")
+        except ImportError:
+            # 导入失败时使用默认值
+            username = "default"
     log_file_name = f"{username}.log"
 
     # 日志目录为系统盘根目录下的ScheduledTasks/logs文件夹
-    log_dir = TaskScheduler().task_folder / "logs"
+    try:
+        # 延迟导入，避免循环依赖
+        from src.core.TaskScheduler import TaskScheduler
+        log_dir = TaskScheduler().task_folder / "logs"
+    except ImportError:
+        # 导入失败时使用默认路径
+        log_dir = os.path.join(os.path.expanduser('~'), 'ScheduledTasks', 'logs')
     # 创建日志目录，若不存在
     os.makedirs(log_dir, exist_ok=True)
     new_log_path = os.path.join(log_dir, log_file_name)

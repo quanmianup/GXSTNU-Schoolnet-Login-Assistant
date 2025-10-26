@@ -51,7 +51,7 @@ class NetworkManager:
     该类从配置文件中读取必要的参数，提供网络状态检查、获取认证链接、登录和登出等功能。
     
     属性:
-        TEST_URL (str): 用于测试网络连接的URL
+        TEST_URL (list): 用于测试网络连接的URL
         BASE_URL (str): 校园网认证的基础URL
         USERNAME (str): 默认登录用户名
         PASSWORD (str): 默认登录密码
@@ -120,7 +120,7 @@ class NetworkManager:
         """
         初始化网络管理类，从配置文件中获取必要的网络参数。
         """
-        self.TEST_URL = credentials.get("TEST_URL")
+        self.TEST_URL:list = credentials.get("TEST_URL")
         self.BASE_URL = credentials.get("BASE_URL")
         self.USERNAME = credentials.get("USERNAME")
         self.PASSWORD = credentials.get("PASSWORD")
@@ -140,14 +140,16 @@ class NetworkManager:
     def check_network(self):
         """
         检查网络连接状态，判断网络是否连接成功且不在认证页面。
+        该方法会随机选择一个测试URL进行连接，增加了检测的可靠性。
 
         返回:
             bool: 若网络连接成功且不在认证页返回 True，否则返回 False。
         """
         headers = {'User-Agent': 'Mozilla/5.0'}
+        url = random.choice(self.TEST_URL)
         try:
             # 发送 GET 请求检测网络状态
-            response = requests.get(url=self.TEST_URL, headers=headers, timeout=self.RETRY_INTERVAL)
+            response = requests.get(url=url, headers=headers, timeout=self.RETRY_INTERVAL)
             # 判断状态码是否为 200 且响应 URL 不包含认证域名
             is_connected = response.status_code == 200 and self.AUTH_DOMAIN not in response.url
 

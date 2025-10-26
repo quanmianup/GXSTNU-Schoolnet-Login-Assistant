@@ -15,12 +15,16 @@
 2. 安装pyinstaller: uv pip install pyinstaller
 3. 运行此脚本: python build_auto_login.py
 """
-import os
-import shutil
-import subprocess
-import sys
-from pathlib import Path
-
+try:
+    import os
+    import shutil
+    import subprocess
+    import sys
+    from pathlib import Path
+except Exception as e:
+    print(f"导入模块失败：{e}")
+    time.sleep(3)
+    sys.exit(1)
 
 # Windows 终端颜色支持
 class ConsoleColors:
@@ -95,6 +99,8 @@ def invoke_packaging():
         # 添加隐藏的导入以确保所有依赖都被包含在可执行文件中
         '--hidden-import=src.core.NetworkManager',
         '--hidden-import=src.utils.logger',
+        '--hidden-import=src.core.Credentials',
+        '--hidden-import=src.core.TaskScheduler',
         '--hidden-import=requests',
         '--hidden-import=Crypto',
         '--hidden-import=loguru',

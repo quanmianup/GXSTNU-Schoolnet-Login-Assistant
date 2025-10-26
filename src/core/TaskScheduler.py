@@ -47,8 +47,7 @@ print(message)
 import os
 import subprocess
 from pathlib import Path
-
-from PySide6.QtCore import QTime
+from datetime import datetime
 
 from src.utils.logger import logger
 
@@ -108,7 +107,8 @@ class TaskScheduler:
         file_name = os.path.basename(file_path)
         task_name = self.get_full_task_name(file_name)
         try:
-            time_str = QTime.currentTime().toString("HH:mm:ss")
+            # 使用Python内置的datetime替代PySide6的QTime
+            time_str = datetime.now().strftime("%H:%M:%S")
             cmd = [
                 "schtasks", "/Create",
                 "/TN", task_name,

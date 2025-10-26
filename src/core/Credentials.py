@@ -94,11 +94,12 @@ class CredentialManager:
         self.task_folder = TaskScheduler().task_folder  # 任务文件夹路径
         self.CREDENTIALS_file_path = self._get_config_path()  # 配置文件路径
         self._load_credentials()  # 加载凭证配置
+        self._check_config()  # 检查TEST_URL配置类型
         self._load_key()  # 加载加密密钥
 
     def _load_credentials(self):
         """
-        从配置文件中动态加载CREDENTIALS配置
+        从配置文件中加载CREDENTIALS配置
         通过importlib模块动态导入配置文件，避免硬编码路径依赖
         若配置文件不存在或格式错误，会记录日志并抛出异常
         """
@@ -286,9 +287,27 @@ class CredentialManager:
         with open(self.CREDENTIALS_file_path, 'w', encoding='utf-8') as f:
             f.writelines(new_lines)
 
+    def _check_config(self):
+        """
+        检查配置文件是否为最新版本；
+        此次更新为检测TEST_URL配置类型是否为list，如果不是则删除并重新创建配置文件
+        """
+        global CREDENTIALS
+        
+        if 'TEST_URL' not in CREDENTIALS or not isinstance(CREDENTIALS['TEST_URL'], list):
+            logger.warning(f"TEST_URL配置类型错误: {type(CREDENTIALS['TEST_URL']).__name__}，应为list")
+            # 删除错误的配置文件
+            os.remove(self.CREDENTIALS_file_path)
+            # 重新创建配置文件
+            self.create_local_credentials_file()
+            logger.info("已删除错误配置文件并重新创建默认配置文件")
+            # 重新加载配置
+            self._load_credentials()
+            logger.info("已重新加载配置")
+
     def create_local_credentials_file(self):
         """
-        创建默认配置文件（仅当文件不存在时）
+        创建默认配置文件（不论文件是否存在）
         包含初始密钥、空凭证和默认配置参数
         创建的文件包含详细注释，说明各配置项的用途
         """
@@ -320,7 +339,7 @@ CREDENTIALS = {
     'AUTH_DOMAIN': 'auth.gxstnu.edu.cn',
     'MAX_RETRY': 4,
     'RETRY_INTERVAL': 1.5,
-    'TEST_URL': 'http://www.bilibili.com',
+    'TEST_URL': ['http://www.bilibili.com', 'http://www.baidu.com', 'http://www.gitee.com', 'http://www.taobao.com', 'http://www.douyin.com'],
     'MAIN_LOCK': True,
     'UPDATE_ON_START': True,
 }
@@ -330,6 +349,11 @@ CREDENTIALS = {
             with open(self.CREDENTIALS_file_path, 'w', encoding='utf-8') as f:
                 f.write(default_content)
             logger.info(f"已创建 {self.CREDENTIALS_file_path} 并写入默认配置")
+        else:
+            # 直接覆盖现有文件
+            with open(self.CREDENTIALS_file_path, 'w', encoding='utf-8') as f:
+                f.write(default_content)
+            logger.info(f"已覆盖 {self.CREDENTIALS_file_path} 并写入默认配置")
 
 
 # 全局单例实例，供系统其他模块直接调用

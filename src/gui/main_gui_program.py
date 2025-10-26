@@ -100,7 +100,7 @@ class MainWindow(QMainWindow):
 
         # 初始化保活功能相关变量
         self.keep_alive_timer = QTimer(self)
-        self.keep_alive_timer.setInterval(5000)  # 5秒
+        self.keep_alive_timer.setInterval(1000*60*5)  # 每5分钟检查一次网络状态
         self.keep_alive_timer.timeout.connect(self._check_network_status_and_update_tabwiget)
         self.keep_alive_timer.start()
 
@@ -381,17 +381,20 @@ class MainWindow(QMainWindow):
 
     def _check_network_status_and_update_tabwiget(self):
         """
-        定期检查网络状态，更新UI显示，并在需要时自动尝试登录。
+        定期检查网络状态，更新UI显示，并在当前时间不在00:00-7:00之间时自动尝试登录。
         
         功能:
         - 检查网络连接状态
         - 更新UI中的网络状态显示
         - 在网络离线且保活功能开启时，自动尝试重新登录
         """
-        self.task_executor.execute_task(
-            func=lambda: networkmanager.check_network(),
-            op_type="keep_alive_check"
-        )
+        if 0 <= QTime.currentTime().hour() < 7:
+            return
+        else:
+            self.task_executor.execute_task(
+                func=lambda: networkmanager.check_network(),
+                op_type="keep_alive_check"
+            )
 
     def setup_log_context_menu(self):
         """
@@ -577,9 +580,9 @@ class MainWindow(QMainWindow):
                     logger.error(f"检查更新失败: {error_msg}")
                     QMessageBox.critical(self, "错误", f"检查更新失败: {error_msg}")
                 self.ui.pushButton_update.setEnabled(True)
+
             elif op_type == "keep_alive_check":
                 # 网络在线检测结果处理
-                current_time = QTime.currentTime()
                 if success:
                     if message:
                         # 网络在线，显示成功状态
@@ -594,10 +597,8 @@ class MainWindow(QMainWindow):
                     else:
                         # 网络离线，显示失败状态
                         self.ui.stackedWidget_message_netstatus.setCurrentIndex(2)
-                        # 更新网络状态记录
-                        # 检查保活按钮是否开启，如果开启则尝试登录,检查当前时间是否在00:00-7:00之间
-                        # if self.ui.pushButton_keeplogin.isChecked() :
-                        if self.ui.pushButton_keeplogin.isChecked() and (7 <= current_time.hour() <= 24):
+                        # 检查保活按钮是否开启，如果开启则尝试登录
+                        if self.ui.pushButton_keeplogin.isChecked():
                             # 在后台线程执行登录尝试
                             username = self.ui.lineEdit_username.text().strip()
                             password = self.ui.lineEdit_password.text().strip()
